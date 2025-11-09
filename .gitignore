@@ -1,0 +1,94 @@
+# FakeScope Project - Git Ignore Rules
+
+# ============================================
+# Python Virtual Environments
+# ============================================
+venv/
+.venv/
+env/
+ENV/
+*.pyc
+__pycache__/
+
+# ============================================
+# Jupyter Notebook Checkpoints
+# ============================================
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# ============================================
+# Model Artifacts (Large Files)
+# ============================================
+# Transformer models
+distilbert_fakenews/
+distilbert_fakenews_2stage/
+distilbert_news_adapted/
+
+# Baseline models
+*.joblib
+best_baseline_model.joblib
+tfidf_vectorizer.joblib
+
+# PyTorch model weights
+*.pt
+*.pth
+*.safetensors
+*.bin
+
+# ============================================
+# Training & Evaluation Outputs
+# ============================================
+# Training checkpoints
+results/
+results_2stage/
+mlm_results/
+results_fold*/
+
+# Cache and temporary files
+factcheck_cache.json
+cv_aggregate_results.json
+model_comparison_summary.json
+
+# Generated plots/charts
+cv_vs_2stage_comparison.png
+*.png
+
+# ============================================
+# Dataset Files (Optional - Comment out if tracking datasets)
+# ============================================
+# datasets/input/alt/fake_news_total.csv  # Uncomment to ignore merged dataset
+
+# ============================================
+# IDE & Editor Files
+# ============================================
+# VS Code
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+
+# ============================================
+# System Files
+# ============================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ============================================
+# Logs & Temporary Files
+# ============================================
+*.log
+*.tmp
+*.swp
+*~
+
+# ============================================
+# Model Backups (Optional)
+# ============================================
+model_backups/
+
+# ============================================
+# Hugging Face Cache (Optional - Large HF models)
+# ============================================
+# ~/.cache/huggingface/  # System-level, not in project
