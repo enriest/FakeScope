@@ -1,0 +1,28 @@
+# Reduce Docker build context size
+.git
+.github
+.gitignore
+__pycache__
+*.pyc
+.venv
+venv
+ENV
+.ipynb_checkpoints
+*.ipynb
+mlruns
+results_2stage
+results_fold*
+mlm_results
+Documents
+tests
+scripts
+datasets
+*.log
+htmlcov
+.coverage*
+*.png
+cv_aggregate_results.json
+model_comparison_summary.json
+*.joblib
+distilbert_news_adapted
+# Keep distilbert_fakenews_2stage included (do not ignore)

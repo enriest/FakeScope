@@ -28,7 +28,8 @@ spacy>=3.7.0,<4.0.0
 # ============================================
 torch>=2.3.0,<3.0.0
 transformers>=4.44.2,<5.0.0
-datasets>=2.19.0,<3.0.0
+# datasets>=2.19.0,<3.0.0  # REMOVED: Conflicts with mlflow due to pyarrow>=21 requirement
+                           # Replaced with native torch.utils.data.Dataset (see NewsDataset class)
 evaluate>=0.4.0,<1.0.0
 accelerate>=0.26.0,<2.0.0
 
@@ -48,6 +49,15 @@ joblib>=1.4.2,<2.0.0
 # External APIs
 # ============================================
 google-api-python-client>=2.126.0,<3.0.0
+beautifulsoup4>=4.12.3,<5.0.0
+
+# ============================================
+# Web Frameworks & UI
+# ============================================
+streamlit>=1.37.0,<2.0.0
+fastapi>=0.115.0,<1.0.0
+uvicorn[standard]>=0.30.0,<1.0.0
+gradio>=4.44.0,<5.0.0
 
 # ============================================
 # Attention Visualization (Optional)
@@ -55,9 +65,21 @@ google-api-python-client>=2.126.0,<3.0.0
 bertviz>=1.4.0,<2.0.0
 
 # ============================================
-# Statistical Analysis (Cross-Validation)
+# Statistical Analysis & Advanced ML
 # ============================================
 scipy>=1.10.0,<2.0.0
+statsmodels>=0.14.0,<1.0.0
+xgboost>=2.0.0,<3.0.0
+
+# ============================================
+# Explainability & Interpretability
+# ============================================
+shap>=0.44.0,<1.0.0
+
+# ============================================
+# Experiment Tracking
+# ============================================
+mlflow>=2.9.0,<3.0.0
 
 # ============================================
 # Development Tools (Optional - Comment out in production)
@@ -67,3 +89,4 @@ scipy>=1.10.0,<2.0.0
 # black>=23.0.0
 # flake8>=6.0.0
 # pytest>=7.4.0
+# pytest-cov>=4.1.0

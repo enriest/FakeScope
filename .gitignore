@@ -44,6 +44,12 @@ results_2stage/
 mlm_results/
 results_fold*/
 
+# MLFlow experiment tracking
+mlruns/
+mlartifacts/
+.mlflow/
+mlflow.db
+
 # Cache and temporary files
 factcheck_cache.json
 cv_aggregate_results.json
@@ -53,10 +59,25 @@ model_comparison_summary.json
 cv_vs_2stage_comparison.png
 *.png
 
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+*.cover
+.pytest_cache/
+
 # ============================================
 # Dataset Files (Optional - Comment out if tracking datasets)
 # ============================================
-# datasets/input/alt/fake_news_total.csv  # Uncomment to ignore merged dataset
+datasets/
+datasets/**
+
+# App runtime data
+data/
+.streamlit/
+
+# Streamlit static cache
+.cache/
 
 # ============================================
 # IDE & Editor Files

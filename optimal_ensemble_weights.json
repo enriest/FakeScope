@@ -1,0 +1,9 @@
+{
+  "transformer_weight": 0.5,
+  "lr_weight": 0.5,
+  "accuracy": 0.5,
+  "f1_score": 0.2647058823529412,
+  "precision": 0.75,
+  "recall": 0.16071428571428573,
+  "roc_auc": 0.862012987012987
+}

@@ -1,0 +1,23 @@
+# Codecov configuration
+coverage:
+  precision: 2
+  round: down
+  range: "70...100"
+  status:
+    project:
+      default:
+        target: 25%
+        threshold: 5%
+    patch:
+      default:
+        target: 25%
+
+ignore:
+  - "tests/"
+  - "**/__init__.py"
+  - "**/conftest.py"
+
+comment:
+  layout: "header, diff, files, footer"
+  behavior: default
+  require_changes: false
