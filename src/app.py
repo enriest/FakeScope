@@ -1,27 +1,32 @@
 import os
+import logging
 from typing import Optional
 
 import streamlit as st
 
 from src.inference import credibility_score, predict_proba
-from src.factcheck import fetch_fact_checks, aggregate_google_score
+from src.factcheck import fetch_fact_checks, aggregate_google_score, is_configured as gc_is_configured
+from src.translate import translate_to_english
 from src.openai_explain import generate_explanation
 from src.storage import init_db, insert_prediction, fetch_recent
 from src.utils import extract_text_from_url
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 APP_TITLE = "FakeScope – Fake News Detector"
 
 
-def _predict_flow(input_text: str, url: Optional[str], title: Optional[str]):
-    model_scores = predict_proba(input_text)
+def _predict_flow(model_text: str, query_text: str, url: Optional[str], title: Optional[str], language: str):
+    model_scores = predict_proba(model_text)
     cred = model_scores["true"] * 100.0
 
-    google_items = fetch_fact_checks(title or input_text)
+    google_items = fetch_fact_checks(title or query_text, language_code=language)
     g_score = aggregate_google_score(google_items)
 
     explanation = generate_explanation(
-        input_text=input_text,
+        input_text=model_text,
         model_scores=model_scores,
         google_items=google_items,
         google_score=g_score,
@@ -33,7 +38,7 @@ def _predict_flow(input_text: str, url: Optional[str], title: Optional[str]):
             input_type="url" if url else ("title" if title else "text"),
             url=url,
             title=title,
-            text=input_text,
+            text=model_text,
             model_fake=model_scores["fake"],
             model_true=model_scores["true"],
             google_score=g_score,
@@ -56,6 +61,13 @@ def main():
         url = st.text_input("Article URL (optional)")
         title = st.text_input("Title (optional)")
         text = st.text_area("Article text or claim", height=180)
+
+        # Language selection for Google Fact Check API
+        lang_options = [
+            "en","es","fr","de","it","pt","ru","ar","zh","hi"
+        ]
+        language = st.selectbox("Fact Check Language", options=lang_options, index=0, help="Language code passed to Google Fact Check Tools API.")
+        auto_translate = st.checkbox("Auto-translate non-English to English", value=True, help="Translate claim/article before model & explanation when language != en.")
 
         if url and not text:
             if st.button("Fetch text from URL"):
@@ -85,20 +97,52 @@ def main():
             else:
                 base_text = text or title or url
                 with st.spinner("Running model, checking sources, asking LLM..."):
+                    model_input = base_text
+                    translated_used = False
+                    logger.info(f"Translation check: language={language}, auto_translate={auto_translate}")
+                    if language != "en" and auto_translate:
+                        logger.info(f"Attempting translation from {language}")
+                        logger.info(f"Original text preview: {base_text[:100]}...")
+                        translated = translate_to_english(base_text, language)
+                        logger.info(f"Translated text preview: {translated[:100]}...")
+                        logger.info(f"Translation result - original length: {len(base_text)}, translated length: {len(translated)}, different: {translated != base_text}")
+                        # Use translated text even if similar, unless completely identical
+                        if translated and len(translated.strip()) > 0:
+                            if translated != base_text:
+                                model_input = translated
+                                translated_used = True
+                                logger.info("Translation applied successfully")
+                            else:
+                                # Text unchanged - likely already English or mostly proper nouns
+                                logger.warning("Translation returned identical text - possibly already English or contains mostly proper nouns")
+                                model_input = translated  # Use it anyway
+                                translated_used = False  # But mark as not translated for user info
+                        else:
+                            logger.warning("Translation returned empty or invalid")
                     model_scores, cred, google_items, g_score, explanation = _predict_flow(
-                        base_text, url=url or None, title=title or None
+                        model_input, base_text, url=url or None, title=title or None, language=language
                     )
 
                 st.markdown("### Results")
                 st.metric("Model Credibility (0-100)", f"{cred:.1f}")
                 st.progress(min(max(model_scores["true"], 0.0), 1.0))
                 st.caption(f"Prob True: {model_scores['true']:.3f} | Prob Fake: {model_scores['fake']:.3f}")
+                if language != "en" and auto_translate:
+                    if translated_used:
+                        st.caption("✅ Model & explanation ran on translated English text.")
+                    else:
+                        st.caption("⚠️ Translation returned unchanged text (possibly already English or contains mostly proper nouns). Model used as-is.")
+                elif language != "en":
+                    st.caption("ℹ️ Auto-translate is disabled. Model used original non-English text.")
 
                 st.markdown("### Google Fact Check")
                 if g_score is not None:
                     st.metric("Aggregated Fact Check Score (0-1)", f"{g_score:.2f}")
                 else:
-                    st.write("No fact-check results found or API not configured.")
+                    if not gc_is_configured():
+                        st.write("Google Fact Check API key not configured.")
+                    else:
+                        st.write("No fact-check results found for this query.")
 
                 if google_items:
                     for it in google_items:
@@ -107,11 +151,31 @@ def main():
                             f"[source]({it.get('url')})"
                         )
 
+                # Diagnostics line
+                api_status = "yes" if gc_is_configured() else "no"
+                st.caption(f"API configured: {api_status} | Query language: {language}")
+
                 st.markdown("### Explanation (LLM)")
                 if explanation:
                     st.write(explanation)
                 else:
-                    st.write("(OpenAI key not configured — skipping explanation.)")
+                    st.write("(LLM API key not configured — skipping explanation. Set OPENAI_API_KEY, PERPLEXITY_API_KEY, or GEMINI_API_KEY and FAKESCOPE_LLM_PROVIDER.)")
+                
+                # Show translation if it was applied
+                if language != "en" and auto_translate:
+                    if translated_used and model_input != base_text:
+                        with st.expander("📝 View Translation"):
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                st.markdown(f"**Original ({language.upper()}):**")
+                                st.text_area("", base_text, height=150, key="orig_text", disabled=True, label_visibility="collapsed")
+                            with col2:
+                                st.markdown("**Translated (EN):**")
+                                st.text_area("", model_input, height=150, key="trans_text", disabled=True, label_visibility="collapsed")
+                    elif not translated_used:
+                        with st.expander("ℹ️ Translation Note"):
+                            st.info("Translation API returned the text unchanged. This typically means the text already contains mostly English words, proper nouns, or technical terms that don't require translation.")
+                            st.text_area("Original Text:", base_text, height=100, disabled=True)
 
     with tabs[1]:
         st.subheader("Recent Analyses")

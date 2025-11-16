@@ -19,6 +19,7 @@
 - [LLM Integration](#llm-integration)
 - [API Integration](#api-integration)
 - [Deployment](#deployment)
+ - [Language Support](#language-support)
 - [Hugging Face Space](#hugging-face-space)
 - [Testing](#testing)
 - [Contributing](#contributing)
@@ -136,8 +137,12 @@ python -m spacy download en_core_web_sm
 python -c "import nltk; nltk.download('stopwords'); nltk.download('punkt')"
 
 # 5. Set API keys (optional for LLM integration)
-export OPENAI_API_KEY="sk-your-openai-key"
+export OPENAI_API_KEY="sk-your-openai-key"           # If using OpenAI
+export PERPLEXITY_API_KEY="pplx-your-perplexity-key" # If using Perplexity
 export GOOGLE_FACTCHECK_API_KEY="your-google-api-key"
+
+# 6. Choose LLM provider (optional, default: openai)
+export FAKESCOPE_LLM_PROVIDER="openai"  # Options: "openai" or "perplexity"
 ```
 
 ### Installation Notes
@@ -511,6 +516,47 @@ FakeScope is currently a **research-grade project** optimized for Jupyter notebo
 
 The app is now containerized with a Streamlit UI and ready for Fly.io. See `DEPLOYMENT.md` for step-by-step instructions (Docker build, secrets, deploy). A FastAPI backend runs on port 8001 for future API use (exposed only if configured).
 
+## 🌐 Language Support
+
+FakeScope now includes a language selector (dropdown) in the Streamlit UI for the **Google Fact Check API queries**. Supported language codes (ISO 639-1): `en`, `es`, `fr`, `de`, `it`, `pt`, `ru`, `ar`, `zh`, `hi`.
+
+### What Is Multilingual vs. What Is Not
+- **Fact Check Lookup**: Multilingual. We pass the selected language code to Google Fact Check Tools API so external fact-check sources can be searched in that language.
+- **Model Classification**: Monolingual (English). The DistilBERT classifier (`distilbert_fakenews_2stage/`) was fine-tuned on English news. Direct predictions on non-English text may degrade (e.g., lower confidence, misclassification).
+
+### Recommended Workflow for Non-English Articles
+1. Enter the original non-English article text and select its language for fact-check retrieval (e.g., `es` for Spanish).
+2. (Optional but advised) Translate the article to English before running the analysis for better model performance. You can do this manually or integrate an automatic translation layer (e.g., DeepL, Google Translate API) prior to calling the prediction.
+3. Compare: Original language fact-check sources + English-model credibility score.
+
+### Improving Multilingual Classification (Future Enhancements)
+- Replace model with a multilingual checkpoint (e.g., `distilbert-base-multilingual-cased` or `xlm-roberta-base`) and re-run 2-stage domain adaptation on multilingual corpora.
+- Add automatic translation fallback when input language != `en`.
+- Store language field in SQLite for analytics.
+
+### Caveats
+- Credibility score may not reflect nuances of local-language idioms, sarcasm, or culturally specific references.
+- Google Fact Check results availability varies significantly by language and region.
+ 
+### Automatic Translation
+An optional auto-translation step (enabled by default) converts non-English input to English *before* model inference and LLM explanation using `deep-translator`'s Google backend. Fact-check querying still uses the original (non-translated) text for better local source matching.
+
+Key points:
+- Toggle in UI: "Auto-translate non-English to English" checkbox.
+- Disable globally: set environment variable `FAKESCOPE_DISABLE_TRANSLATION=1`.
+- Fallback: On any translation error, original text is used silently and a caption notes the failure.
+- Storage: The database currently stores only the text actually scored (translated if applied). Future enhancement: preserve both originals.
+
+Quality & Limitations:
+- Machine translation may introduce subtle semantic shifts; verify critical claims manually.
+- Proper nouns, idioms, and region-specific political terms can be mistranslated and affect prediction confidence.
+- Short fragments (<15 chars) are rarely improved by translation—model often already struggles with extremely short context.
+
+Best Practice:
+For high-stakes evaluation (policy, medical, geopolitical claims), manually review translation or integrate a premium translation API with quality scores before trusting the credibility output.
+
+If you routinely analyze non-English content, consider forking and adapting the training pipeline with a multilingual model plus per-language domain adaptation.
+
 ## � Testing
 
 ### Running Tests
@@ -616,13 +662,28 @@ If you use FakeScope in your research, please cite:
 **A**: Add new labeled data to `datasets/input/`, then re-run Stage 2 training (cells 71-80 in `Project.ipynb`). Stage 1 (MLM) only needs retraining if you add 10K+ unlabeled articles.
 
 ### Q: Can I deploy this without the LLM features?
-**A**: Yes, the core model works without OpenAI API. LLM explanations are optional (set `OPENAI_API_KEY=None`).
+**A**: Yes, the core model works without LLM API. LLM explanations are optional (don't set `OPENAI_API_KEY` or `PERPLEXITY_API_KEY` if not needed).
+
+### Q: What's the difference between OpenAI, Perplexity, and Gemini?
+**A**: All three provide LLM explanations:
+- **OpenAI (GPT-4o-mini)**: Fast, reliable, well-documented. Best for production.
+- **Perplexity**: Includes real-time web search. Best for current events.
+- **Gemini (1.5 Flash)**: Generous free tier (1500 req/day). Best for development and moderate usage.
+
+Choose via `FAKESCOPE_LLM_PROVIDER` env variable (`openai`, `perplexity`, or `gemini`).
+
+### Q: Where can I customize the LLM prompts?
+**A**: All prompts are in `src/openai_explain.py` (lines ~80-95). See `PROMPT_CUSTOMIZATION.md` for detailed guide and examples. Same prompts work for OpenAI, Perplexity, and Gemini.
 
 ### Q: What's the difference between `Development.ipynb` and `Project.ipynb`?
 **A**: `Project.ipynb` is the combined, production-ready notebook (5,319 lines). `Development.ipynb` is the original research notebook. Use `Project.ipynb` for new work.
 
 ### Q: How much does it cost to run?
-**A**: Local training/inference is free. API costs: Google Fact Check (1000 free queries/day), OpenAI GPT (~$0.01-0.03 per explanation).
+**A**: Local training/inference is free. API costs: 
+- Google Fact Check (1000 free queries/day)
+- OpenAI GPT (~$0.01-0.03 per explanation)
+- Perplexity (~$0.01-0.05 per explanation)
+- **Gemini (~$0.005-0.01 per explanation, FREE tier: 1500/day)**
 
 ---
 

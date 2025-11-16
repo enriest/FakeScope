@@ -97,6 +97,16 @@ Thumbs.db
 desktop.ini
 
 # ============================================
+# API Keys & Secrets (CRITICAL - Never commit!)
+# ============================================
+.env
+.env.local
+*.key
+*_key.txt
+secrets.json
+config/secrets.json
+
+# ============================================
 # Logs & Temporary Files
 # ============================================
 *.log

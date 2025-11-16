@@ -34,6 +34,11 @@ def _normalize_rating(textual_rating: Optional[str]) -> Optional[float]:
     return _RATING_MAP.get(key)
 
 
+def is_configured() -> bool:
+    """Return True if the Google Fact Check API key is available."""
+    return bool(FACTCHECK_API_KEY)
+
+
 def fetch_fact_checks(
     claim_text: str,
     language_code: str = "en",

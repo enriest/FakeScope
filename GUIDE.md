@@ -65,14 +65,22 @@ git --version      # Should show Git version
 
 ### 1.3 API Keys Setup
 
-**Purpose**: Obtain API keys for external services (OpenAI and Google Fact Check).
+**Purpose**: Obtain API keys for external services (OpenAI/Perplexity for LLM and Google Fact Check).
 
-#### OpenAI API Key
+#### OpenAI API Key (Optional - for LLM explanations)
 1. Go to https://platform.openai.com/api-keys
 2. Sign in or create account
 3. Click "Create new secret key"
 4. Copy the key (starts with `sk-`)
 5. **Important**: Store securely - you won't see it again
+
+#### Perplexity API Key (Alternative to OpenAI - for LLM explanations)
+1. Go to https://www.perplexity.ai/settings/api
+2. Sign in or create account
+3. Click "Generate API Key"
+4. Copy the key (starts with `pplx-`)
+5. **Important**: Store securely - you won't see it again
+6. **Note**: Perplexity uses a different pricing model than OpenAI
 
 #### Google Fact Check API Key
 1. Go to https://console.cloud.google.com/
@@ -89,12 +97,54 @@ git --version      # Should show Git version
 **Store keys temporarily**:
 ```bash
 # Add to your ~/.zshrc or ~/.bashrc for easy access
-export OPENAI_API_KEY="sk-your-openai-key-here"
+export OPENAI_API_KEY="sk-your-openai-key-here"  # If using OpenAI
+export PERPLEXITY_API_KEY="pplx-your-perplexity-key-here"  # If using Perplexity
 export GOOGLE_FACTCHECK_API_KEY="your-google-key-here"
+
+# Choose LLM provider (default: openai)
+export FAKESCOPE_LLM_PROVIDER="openai"  # Options: "openai" or "perplexity"
+
+# Optional: Customize models
+export FAKESCOPE_OPENAI_MODEL="gpt-4o-mini"  # Default model for OpenAI
+export FAKESCOPE_PERPLEXITY_MODEL="llama-3.1-sonar-large-128k-online"  # Default for Perplexity
 
 # Reload shell
 source ~/.zshrc
 ```
+
+#### Google Gemini API Key (Alternative to OpenAI/Perplexity - for LLM explanations)
+1. Go to https://ai.google.dev/
+2. Click "Get API key in Google AI Studio"
+3. Sign in with your Google account
+4. Click "Create API Key"
+5. Copy the API key
+6. **Important**: Store securely
+7. **Note**: Gemini has a generous free tier (1500 requests/day for Gemini 1.5 Flash)
+
+**Store keys temporarily**:
+```bash
+# Add to your ~/.zshrc or ~/.bashrc for easy access
+export OPENAI_API_KEY="sk-your-openai-key-here"  # If using OpenAI
+export PERPLEXITY_API_KEY="pplx-your-perplexity-key-here"  # If using Perplexity
+export GEMINI_API_KEY="your-gemini-api-key-here"  # If using Gemini
+export GOOGLE_FACTCHECK_API_KEY="your-google-key-here"
+
+# Choose LLM provider (default: openai)
+export FAKESCOPE_LLM_PROVIDER="openai"  # Options: "openai", "perplexity", or "gemini"
+
+# Optional: Customize models
+export FAKESCOPE_OPENAI_MODEL="gpt-4o-mini"  # Default model for OpenAI
+export FAKESCOPE_PERPLEXITY_MODEL="llama-3.1-sonar-large-128k-online"  # Default for Perplexity
+export FAKESCOPE_GEMINI_MODEL="gemini-1.5-flash"  # Default for Gemini
+
+# Reload shell
+source ~/.zshrc
+```
+
+**Note**: You only need ONE of OpenAI, Perplexity, or Gemini API key for LLM explanations. Choose based on your preference:
+- **OpenAI**: More established, GPT-4o-mini is fast and cost-effective
+- **Perplexity**: Includes real-time web search in responses, good for current events
+- **Gemini**: Google's model with generous free tier, fast and multimodal capable
 
 ---
 
@@ -182,6 +232,8 @@ streamlit run src/app.py
 3. Click "Run Analysis"
 4. Should see model score, Google fact checks (if API key set), and explanation
 
+**Note**: The app will open automatically in your browser at http://localhost:8501 (or similar port).
+
 Press `Ctrl+C` in terminal to stop.
 
 ### 2.7 Test FastAPI Backend
@@ -261,6 +313,9 @@ docker images fakescope:latest
 ```bash
 docker run --rm -p 8080:8080 -p 8001:8001 \
   -e OPENAI_API_KEY="$OPENAI_API_KEY" \
+  -e PERPLEXITY_API_KEY="$PERPLEXITY_API_KEY" \
+  -e GEMINI_API_KEY="$GEMINI_API_KEY" \
+  -e FAKESCOPE_LLM_PROVIDER="$FAKESCOPE_LLM_PROVIDER" \
   -e GOOGLE_FACTCHECK_API_KEY="$GOOGLE_FACTCHECK_API_KEY" \
   fakescope:latest
 ```
@@ -329,8 +384,23 @@ flyctl volumes create fakescope_data --size 1 --region iad
 **Purpose**: Securely store API keys (not in code or logs).
 
 ```bash
-flyctl secrets set OPENAI_API_KEY="$OPENAI_API_KEY"
+# Set LLM API key (choose one based on your preference)
+flyctl secrets set OPENAI_API_KEY="$OPENAI_API_KEY"  # If using OpenAI
+# OR
+flyctl secrets set PERPLEXITY_API_KEY="$PERPLEXITY_API_KEY"  # If using Perplexity
+# OR
+flyctl secrets set GEMINI_API_KEY="$GEMINI_API_KEY"  # If using Gemini
+
+# Set LLM provider (default is "openai")
+flyctl secrets set FAKESCOPE_LLM_PROVIDER="gemini"  # Options: "openai", "perplexity", or "gemini"
+
+# Set Google Fact Check API key
 flyctl secrets set GOOGLE_FACTCHECK_API_KEY="$GOOGLE_FACTCHECK_API_KEY"
+
+# Optional: Customize models
+flyctl secrets set FAKESCOPE_OPENAI_MODEL="gpt-4o-mini"
+flyctl secrets set FAKESCOPE_PERPLEXITY_MODEL="llama-3.1-sonar-large-128k-online"
+flyctl secrets set FAKESCOPE_GEMINI_MODEL="gemini-1.5-flash"
 ```
 
 **Verify secrets are set**:
@@ -342,7 +412,9 @@ flyctl secrets list
 ```
 NAME                         DIGEST                  CREATED AT
 OPENAI_API_KEY               abc123...               2024-01-15
+# OR PERPLEXITY_API_KEY      xyz789...               2024-01-15
 GOOGLE_FACTCHECK_API_KEY     def456...               2024-01-15
+FAKESCOPE_LLM_PROVIDER       ghi789...               2024-01-15
 ```
 
 ### 4.4 Deploy to Fly.io
@@ -475,9 +547,12 @@ git push
 
 1. In your Space, click "Settings"
 2. Scroll to "Repository secrets"
-3. Add two secrets:
-   - **Name**: `OPENAI_API_KEY`, **Value**: your OpenAI key
+3. Add these secrets (choose OpenAI, Perplexity, OR Gemini):
+   - **Name**: `OPENAI_API_KEY`, **Value**: your OpenAI key (if using OpenAI)
+   - **OR Name**: `PERPLEXITY_API_KEY`, **Value**: your Perplexity key (if using Perplexity)
+   - **OR Name**: `GEMINI_API_KEY`, **Value**: your Gemini key (if using Gemini)
    - **Name**: `GOOGLE_FACTCHECK_API_KEY`, **Value**: your Google key
+   - **Name**: `FAKESCOPE_LLM_PROVIDER`, **Value**: `openai`, `perplexity`, or `gemini` (optional, defaults to `openai`)
 4. Click "Save"
 
 ### 5.5 Wait for Build
@@ -750,10 +825,11 @@ flyctl apps destroy fakescope-yourname
 ### Local Testing Commands
 ```bash
 # Run Streamlit
-streamlit run src/app.py
+source .venv/bin/activate
+python -m streamlit run src/app.py
 
 # Run FastAPI
-uvicorn src.api:app --reload --port 8001
+python -m uvicorn src.api:app --reload --port 8001
 
 # Run both with Docker
 docker run --rm -p 8080:8080 -p 8001:8001 \
@@ -788,11 +864,32 @@ curl -X POST http://localhost:8001/predict \
 **Recommended**: Free tier for demos, upgraded for production
 
 ### API Usage Costs
+
+#### LLM APIs (Choose one)
 - **OpenAI GPT-4o-mini**: ~$0.15/1M input tokens, $0.60/1M output
   - ~$0.01-0.03 per explanation
-- **Google Fact Check**: 1000 queries/day free, then paid tier
+  - Fast, reliable, well-documented
+  
+- **Perplexity API**: Usage-based pricing
+  - Varies by model (Llama 3.1 Sonar Large: ~$1/1M tokens)
+  - ~$0.01-0.05 per explanation
+  - Includes real-time web search
+  - Better for current events
 
-**Estimated API cost**: $5-20/month depending on traffic
+- **Google Gemini**: Generous free tier
+  - **Free tier**: 15 requests/minute, 1500 requests/day (Gemini 1.5 Flash)
+  - **Paid**: $0.075/1M input tokens, $0.30/1M output (Flash)
+  - ~$0.005-0.02 per explanation
+  - Best value for moderate usage
+  - Multimodal capable (text, images, video)
+
+#### Other APIs
+- **Google Fact Check**: 1000 queries/day free, then paid tier
+  - Free tier usually sufficient for development/small deployments
+
+**Estimated total API cost**: 
+- **With Gemini (free tier)**: $0-5/month (just Fact Check API if needed)
+- **With OpenAI/Perplexity**: $5-20/month depending on traffic
 
 ---
 
@@ -832,6 +929,227 @@ After successful deployment:
 5. **Rate Limiting**: Protect API from abuse with middleware
 
 6. **Caching**: Add Redis for fact-check results caching
+
+---
+
+## Customizing LLM Prompts
+
+**Purpose**: Understand where and how to modify the prompts sent to OpenAI or Perplexity.
+
+### Location of Prompts
+
+All LLM prompts for both OpenAI and Perplexity are located in:
+```
+src/openai_explain.py
+```
+
+### Prompt Structure
+
+In the `generate_explanation()` function (around line 60-90), you'll find two key prompts:
+
+#### 1. System Prompt
+```python
+system_prompt = "You are an expert, neutral fact-checking assistant. Be precise and cite sources."
+```
+
+**Purpose**: Defines the role and behavior of the AI assistant.
+
+**Customization tips**:
+- Change the tone (e.g., "friendly educator", "serious investigative journalist")
+- Add specific instructions (e.g., "Always mention confidence levels", "Focus on source credibility")
+- Adjust expertise level (e.g., "Explain like you're talking to a 10th grader")
+
+**Example modifications**:
+```python
+# More casual tone
+system_prompt = "You are a friendly fact-checking guide who explains things clearly without jargon."
+
+# More technical
+system_prompt = "You are a senior investigative journalist with expertise in media literacy and disinformation analysis."
+
+# Bilingual support
+system_prompt = "You are a multilingual fact-checking expert. Respond in the same language as the input text."
+```
+
+#### 2. User Prompt (Task Description)
+```python
+user_prompt = (
+    "You are a careful fact-checking teacher.\n"
+    "Explain in 2-4 short paragraphs, accessible to non-experts, why the claim/article might be true or fake.\n"
+    "Use external evidence if available. Keep balanced, avoid overclaiming, and cite sources as bullet links.\n\n"
+    f"Claim/Article text (truncated):\n{_truncate(input_text)}\n\n"
+    f"Model scores (probabilities): fake={model_scores.get('fake'):.3f}, true={model_scores.get('true'):.3f}.\n"
+    f"Google Fact Check aggregate score (0-1): {google_score if google_score is not None else 'N/A'}.\n\n"
+    f"External evidence:\n{evidence_str}"
+)
+```
+
+**Purpose**: Contains the actual task, context, and data for analysis.
+
+**Customization tips**:
+- Change output length (e.g., "in 1 paragraph" or "in 5-7 paragraphs")
+- Adjust detail level (e.g., "provide detailed statistical analysis" or "keep it very simple")
+- Change focus (e.g., "focus on emotional manipulation techniques" or "analyze source credibility first")
+- Modify formatting (e.g., "use numbered lists" or "provide bullet points")
+
+**Example modifications**:
+```python
+# Shorter output
+user_prompt = (
+    "Summarize in 1-2 sentences whether this claim is likely true or false based on the evidence.\n\n"
+    f"Claim: {_truncate(input_text)}\n"
+    f"Model verdict: {'Likely Fake' if model_scores.get('fake') > 0.5 else 'Likely True'} ({model_scores.get('true'):.1%} confidence)\n"
+    f"External checks: {evidence_str}"
+)
+
+# More detailed analysis
+user_prompt = (
+    "Provide a comprehensive fact-check analysis in 5-7 paragraphs covering:\n"
+    "1. Claim summary and context\n"
+    "2. Model prediction and confidence level\n"
+    "3. External fact-checker consensus\n"
+    "4. Key evidence supporting or refuting the claim\n"
+    "5. Potential biases or limitations\n"
+    "6. Final verdict with confidence rating\n\n"
+    f"Claim/Article:\n{_truncate(input_text, max_chars=5000)}\n\n"
+    f"ML Model: fake={model_scores.get('fake'):.3f}, true={model_scores.get('true'):.3f}\n"
+    f"Fact-Checkers: {evidence_str}"
+)
+
+# Focus on reasoning
+user_prompt = (
+    "Explain the reasoning process step-by-step:\n"
+    "1. What claims are made in the text?\n"
+    "2. What evidence supports or contradicts these claims?\n"
+    "3. How reliable are the sources?\n"
+    "4. What is the likely truth value and why?\n\n"
+    f"Text to analyze:\n{_truncate(input_text)}\n\n"
+    f"Available evidence:\n{evidence_str}"
+)
+```
+
+### Temperature and Token Settings
+
+In the same function, you can adjust:
+
+```python
+temperature: float = 0.2,  # Lower = more focused/deterministic (0.0-2.0)
+max_tokens: int = 500,     # Maximum length of response
+```
+
+**Temperature guide**:
+- `0.0-0.3`: Very focused, consistent, factual (recommended for fact-checking)
+- `0.4-0.7`: Balanced creativity and consistency
+- `0.8-1.5`: More creative, varied responses
+- `1.6-2.0`: Very creative, potentially less accurate
+
+**Max tokens guide**:
+- `100-300`: Brief summaries
+- `500-800`: Standard explanations (current default)
+- `1000-2000`: Detailed analysis
+- `2000+`: Comprehensive reports
+
+### Applying Changes
+
+After modifying `src/openai_explain.py`:
+
+1. **Local testing**:
+   ```bash
+   source .venv/bin/activate
+   python -m streamlit run src/app.py
+   ```
+
+2. **Docker testing**:
+   ```bash
+   docker build -t fakescope:latest .
+   docker run --rm -p 8080:8080 \
+     -e FAKESCOPE_LLM_PROVIDER="openai" \
+     -e OPENAI_API_KEY="$OPENAI_API_KEY" \
+     fakescope:latest
+   ```
+
+3. **Deploy to Fly.io**:
+   ```bash
+   flyctl deploy
+   ```
+
+### Provider-Specific Considerations
+
+**OpenAI (GPT-4o-mini)**:
+- Very fast responses (1-2 seconds)
+- Good at following structured instructions
+- Best for concise, factual explanations
+- Cost: ~$0.01-0.03 per explanation
+
+**Perplexity (Llama 3.1 Sonar)**:
+- Includes real-time web search
+- Better for current events
+- May provide more sources automatically
+- Slightly slower (2-4 seconds)
+- Different pricing model based on usage
+
+**Switching providers**:
+```bash
+# Use OpenAI
+export FAKESCOPE_LLM_PROVIDER="openai"
+
+# Use Perplexity
+export FAKESCOPE_LLM_PROVIDER="perplexity"
+```
+
+The same prompts work for both providers, but you may want to adjust based on their strengths.
+
+### Example: Creating a "Confidence Rating" Prompt
+
+```python
+system_prompt = "You are a fact-checking AI that always provides confidence ratings."
+
+user_prompt = (
+    "Analyze this claim and provide:\n"
+    "1. Verdict: TRUE, FALSE, MIXED, or UNVERIFIABLE\n"
+    "2. Confidence: LOW (0-40%), MEDIUM (40-70%), HIGH (70-100%)\n"
+    "3. Brief reasoning (2-3 sentences)\n"
+    "4. Key sources (if available)\n\n"
+    f"Claim: {_truncate(input_text)}\n"
+    f"ML Model: {model_scores.get('true'):.1%} likely true\n"
+    f"Fact-checkers: {evidence_str}\n\n"
+    "Format your response as:\n"
+    "VERDICT: [verdict]\n"
+    "CONFIDENCE: [level]\n"
+    "REASONING: [explanation]\n"
+    "SOURCES: [sources or N/A]"
+)
+```
+
+### Testing Prompt Changes
+
+Create a test script to quickly iterate:
+
+```python
+# test_prompts.py
+from src.openai_explain import generate_explanation
+
+test_text = "Scientists discover cure for common cold"
+test_scores = {"fake": 0.3, "true": 0.7}
+test_items = []
+test_gscore = None
+
+explanation = generate_explanation(
+    input_text=test_text,
+    model_scores=test_scores,
+    google_items=test_items,
+    google_score=test_gscore,
+    temperature=0.2,  # Try different values
+    max_tokens=300,   # Adjust as needed
+)
+
+print(explanation)
+```
+
+Run with:
+```bash
+python test_prompts.py
+```
 
 ---
 

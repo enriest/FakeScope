@@ -6,6 +6,7 @@ This guide explains how to containerize and deploy the FakeScope web app with Do
 - Two scores: model credibility (0–100) and Google Fact Check aggregate (0–1)
 - An OpenAI-generated explanation
 - A dashboard tab with recent analyses
+ - A language selector for Google Fact Check queries (multilingual lookup)
 
 ## Prerequisites
 
@@ -41,6 +42,7 @@ docker run --rm -p 8080:8080 \
   fakescope:latest
 
 # App will be available at http://localhost:8080
+# The UI includes a "Fact Check Language" dropdown. This affects ONLY Google Fact Check lookups; the DistilBERT classifier remains English-trained.
 ```
 
 ## Fly.io Deployment
@@ -99,6 +101,41 @@ Environment variables:
 - If you prefer not to embed the model, host it on a storage bucket or HF Hub and set `FAKESCOPE_MODEL_DIR` to a mounted path, then download on startup.
 - Google Fact Check API has daily quotas. The app aggregates the first few results and maps textual ratings to a numeric score.
 - If `OPENAI_API_KEY` is not set, the app still runs; the explanation section will show a placeholder.
+ - Multilingual: Selecting a non-English language (e.g., `es`, `fr`) queries fact-check sources in that language. For higher-quality classification of non-English text, translate to English before submission or retrain a multilingual model.
+
+### Multilingual Usage
+The current model (`distilbert_fakenews_2stage/`) was fine-tuned on English news. For non-English input:
+1. Choose the appropriate language in the dropdown so fact-check sources are searched regionally.
+2. (Optional) Translate the text to English prior to analysis for better credibility scoring.
+3. Compare results: external fact-check sources vs. English-based model output.
+
+### Automatic Translation Option
+The UI provides a checkbox (enabled by default) to auto-translate non-English input to English *before* model scoring and LLM explanation using `deep-translator`.
+
+Runtime behavior:
+- Fact check queries still use original language text to maximize local source matches.
+- If translation fails or is disabled, the original text is used and a status caption indicates this.
+- Disable globally by setting `FAKESCOPE_DISABLE_TRANSLATION=1` in the container/VM environment.
+
+Add to Fly secrets or Docker run command:
+```bash
+flyctl secrets set FAKESCOPE_DISABLE_TRANSLATION=1   # disable translation
+```
+```bash
+docker run -e FAKESCOPE_DISABLE_TRANSLATION=1 ... fakescope:latest
+```
+
+Accuracy note: Machine translation may alter nuance (named entities, idioms). For critical misinformation assessments, manually validate the translation or incorporate a higher-quality translation API with confidence scores.
+
+#### Upgrading to True Multilingual Classification
+To natively support multiple languages:
+- Swap model to `distilbert-base-multilingual-cased` or `xlm-roberta-base`.
+- Re-run Stage 1 (MLM) on a combined multilingual news corpus.
+- Re-run Stage 2 (classification) with labeled multilingual fake/true samples.
+- Store `language_code` in DB for longitudinal performance tracking.
+
+#### Optional Enhancement (Not Implemented Yet)
+Add a middleware translation step (e.g., DeepL API) when `language != 'en'` and persist both original and translated text for auditability.
 
 ## Troubleshooting
 
