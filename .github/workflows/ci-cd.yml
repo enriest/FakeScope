@@ -9,6 +9,13 @@ on:
     # Run tests daily at 2am UTC
     - cron: '0 2 * * *'
 
+# Global permissions for the workflow
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+  pull-requests: write
+
 jobs:
   # Job 1: Code Quality & Linting
   lint:
@@ -171,10 +178,16 @@ jobs:
   security:
     name: Security Scan
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for better analysis
     
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
@@ -185,7 +198,7 @@ jobs:
         output: 'trivy-results.sarif'
     
     - name: Upload Trivy results to GitHub Security
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: 'trivy-results.sarif'
 
