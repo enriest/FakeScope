@@ -3,9 +3,8 @@ from typing import Any, Dict, Optional
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from src.inference import predict_proba, credibility_score
-from src.factcheck import fetch_fact_checks, aggregate_google_score
-
+from src.factcheck import aggregate_google_score, fetch_fact_checks
+from src.inference import credibility_score, predict_proba
 
 app = FastAPI(title="FakeScope API", version="1.0.0")
 

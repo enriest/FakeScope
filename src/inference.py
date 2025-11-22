@@ -3,8 +3,7 @@ from functools import lru_cache
 from typing import Dict
 
 import torch
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
-
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 MODEL_DIR = os.getenv("FAKESCOPE_MODEL_DIR", "./distilbert_fakenews_2stage")
 MODEL_MAX_LENGTH = int(os.getenv("FAKESCOPE_MODEL_MAX_LENGTH", "512"))
@@ -23,7 +22,7 @@ def _normalize_repo_id(repo_id: str) -> str:
     if trimmed.startswith("http://") or trimmed.startswith("https://"):
         for prefix in ("https://huggingface.co/", "http://huggingface.co/"):
             if trimmed.startswith(prefix):
-                remainder = trimmed[len(prefix):].strip("/")
+                remainder = trimmed[len(prefix) :].strip("/")
                 parts = remainder.split("/")
                 if len(parts) >= 2:
                     return f"{parts[0]}/{parts[1]}"
@@ -35,7 +34,7 @@ def _normalize_repo_id(repo_id: str) -> str:
 def _load_model_and_tokenizer():
     # Check for Hugging Face token (for private repos)
     hf_token = os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_TOKEN")
-    
+
     # Normalize in case user provided a full URL instead of repo id
     effective_model_dir = _normalize_repo_id(MODEL_DIR)
     config_path = os.path.join(effective_model_dir, "config.json")
@@ -43,8 +42,12 @@ def _load_model_and_tokenizer():
         # Allow treating MODEL_DIR as a Hugging Face Hub repo ID if it contains a slash
         if "/" in effective_model_dir and not os.path.isdir(effective_model_dir):
             try:
-                tokenizer = AutoTokenizer.from_pretrained(effective_model_dir, token=hf_token, trust_remote_code=False)
-                model = AutoModelForSequenceClassification.from_pretrained(effective_model_dir, token=hf_token, trust_remote_code=False)
+                tokenizer = AutoTokenizer.from_pretrained(
+                    effective_model_dir, token=hf_token, trust_remote_code=False
+                )
+                model = AutoModelForSequenceClassification.from_pretrained(
+                    effective_model_dir, token=hf_token, trust_remote_code=False
+                )
             except Exception as e:
                 raise FileNotFoundError(
                     f"Failed to load model from Hugging Face Hub '{effective_model_dir}'. "

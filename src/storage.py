@@ -4,7 +4,6 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
-
 DB_PATH = os.getenv("FAKESCOPE_DB_PATH", "./data/predictions.db")
 Path(DB_PATH).parent.mkdir(parents=True, exist_ok=True)
 

@@ -1,6 +1,6 @@
+import logging
 import os
 import time
-import logging
 from typing import Any, Dict, List, Optional
 
 import requests
@@ -8,6 +8,7 @@ import requests
 # Load .env automatically so GOOGLE_FACTCHECK_API_KEY is available
 try:
     from dotenv import load_dotenv
+
     load_dotenv()
 except Exception:
     pass
@@ -117,7 +118,11 @@ def fetch_fact_checks(
 
 def aggregate_google_score(items: List[Dict[str, Any]]) -> Optional[float]:
     """Aggregate rating_score to a single 0-1 value (mean of available ratings)."""
-    scores = [it.get("rating_score") for it in items if isinstance(it.get("rating_score"), (int, float))]
+    scores = [
+        it.get("rating_score")
+        for it in items
+        if isinstance(it.get("rating_score"), (int, float))
+    ]
     if not scores:
         return None
     return float(sum(scores) / len(scores))

@@ -14,8 +14,12 @@ except Exception:
 
 from src.factcheck import aggregate_google_score, fetch_fact_checks
 from src.factcheck import is_configured as gc_is_configured
-from src.i18n import (SUPPORTED_LANGUAGES, detect_language_from_ip,
-                      get_language_name, get_translation)
+from src.i18n import (
+    SUPPORTED_LANGUAGES,
+    detect_language_from_ip,
+    get_language_name,
+    get_translation,
+)
 from src.inference import credibility_score, predict_proba
 from src.openai_explain import generate_explanation
 from src.storage import fetch_recent, init_db, insert_prediction
@@ -106,10 +110,14 @@ def _chat_with_llm(
     """Generate a chat response from the LLM."""
     import openai
 
-    from src.openai_explain import (GEMINI_MODEL, OPENAI_MODEL,
-                                    PERPLEXITY_MODEL, _build_gemini_client,
-                                    _build_openai_client,
-                                    _build_perplexity_client)
+    from src.openai_explain import (
+        GEMINI_MODEL,
+        OPENAI_MODEL,
+        PERPLEXITY_MODEL,
+        _build_gemini_client,
+        _build_openai_client,
+        _build_perplexity_client,
+    )
 
     provider = llm_provider.lower()
 

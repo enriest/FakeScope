@@ -52,12 +52,12 @@ jobs:
     - name: Run Black (code formatting check)
       run: |
         black --check --diff src/ tests/
-      continue-on-error: true
+      continue-on-error: false
     
     - name: Run isort (import sorting check)
       run: |
         isort --check-only --diff src/ tests/
-      continue-on-error: true
+      continue-on-error: false
     
     - name: Run Flake8 (linting)
       run: |
@@ -73,6 +73,7 @@ jobs:
     permissions:
       contents: read
     strategy:
+      fail-fast: false  # Don't cancel all jobs if one fails
       matrix:
         os: [ubuntu-latest, macos-latest]
         python-version: ['3.9', '3.10', '3.11']
@@ -91,6 +92,14 @@ jobs:
         echo "Python: ${{ matrix.python-version }}"
         echo "Git status:"
         git status
+    
+    - name: Install OpenMP on macOS (for XGBoost)
+      if: runner.os == 'macOS'
+      run: |
+        brew install libomp
+        echo "OpenMP installed successfully"
+        echo "LDFLAGS=-L/usr/local/opt/libomp/lib" >> $GITHUB_ENV
+        echo "CPPFLAGS=-I/usr/local/opt/libomp/include" >> $GITHUB_ENV
     
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
