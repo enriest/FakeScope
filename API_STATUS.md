@@ -6,7 +6,7 @@ Generated: November 16, 2025
 
 ### ✅ Working APIs
 - **Google Gemini**: ✅ API key valid and connected
-  - Key: AIzaSyCHVy2sPPiF5-Vc3AqChQpzlgBRm24e0Jw (first 10 chars)
+  - Key: [REDACTED] (use environment variable)
   - Status: Authentication successful
   - Issue: Model name needs verification (tested `gemini-pro` - not found)
   - **Action needed**: Use correct model name like `gemini-1.5-flash` or `gemini-1.5-pro`
@@ -101,7 +101,7 @@ python -m streamlit run src/app.py
 ```bash
 # Use Gemini - it has a generous free tier
 export FAKESCOPE_LLM_PROVIDER=gemini
-export GOOGLE_API_KEY="AIzaSyCHVy2sPPiF5-Vc3AqChQpzlgBRm24e0Jw"
+export GEMINI_API_KEY="YOUR-GEMINI-API-KEY-HERE"
 export FAKESCOPE_GEMINI_MODEL="gemini-1.5-flash"
 ```
 
@@ -134,8 +134,8 @@ OPENAI_API_KEY=sk-proj-YOUR-NEW-KEY-HERE
 FAKESCOPE_OPENAI_MODEL=gpt-4o-mini
 
 # Google Gemini API (WORKING ✅)
-GEMINI_API_KEY=AIzaSyCHVy2sPPiF5-Vc3AqChQpzlgBRm24e0Jw
-GOOGLE_API_KEY=AIzaSyCHVy2sPPiF5-Vc3AqChQpzlgBRm24e0Jw
+GEMINI_API_KEY=YOUR-GEMINI-KEY-HERE
+GOOGLE_API_KEY=YOUR-GOOGLE-API-KEY-HERE
 FAKESCOPE_GEMINI_MODEL=gemini-1.5-flash
 
 # Perplexity API (NEEDS KEY)
