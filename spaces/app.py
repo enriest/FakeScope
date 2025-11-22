@@ -1,12 +1,16 @@
 import os
+import sys
 from typing import Any, Dict, List, Optional
 
 import gradio as gr
 
-from src.inference import predict_proba
-from src.factcheck import fetch_fact_checks, aggregate_google_score
-from src.openai_explain import generate_explanation
-from src.utils import extract_text_from_url
+# Add src to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
+
+from inference import predict_proba
+from factcheck import fetch_fact_checks, aggregate_google_score
+from openai_explain import generate_explanation
+from utils import extract_text_from_url
 
 
 def run_pipeline(url: str, title: str, text: str) -> Dict[str, Any]:

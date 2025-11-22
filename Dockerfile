@@ -25,8 +25,9 @@ RUN pip install --no-cache-dir -r requirements.txt \
 # Copy app source
 COPY src ./src
 
-# Copy model artifacts (these are ignored by git but included in docker context unless .dockerignore excludes them)
-COPY distilbert_fakenews_2stage ./distilbert_fakenews_2stage
+# DO NOT copy model - it will be downloaded from Hugging Face at runtime
+# to keep Docker image small (< 1GB instead of 8GB+)
+# Set FAKESCOPE_MODEL_DIR environment variable to your HF repo (e.g., "enriest/distilbert-fakenews")
 
 # Optional: Create data dir for sqlite
 RUN mkdir -p /app/data

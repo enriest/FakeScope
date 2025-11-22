@@ -3,9 +3,7 @@ title: FakeScope
 emoji: 🔍
 colorFrom: blue
 colorTo: red
-sdk: gradio
-sdk_version: 4.44.0
-app_file: app.py
+sdk: docker
 pinned: false
 license: mit
 ---
@@ -21,14 +19,17 @@ FakeScope combines machine learning (DistilBERT), external fact-checking APIs (G
 - **LLM Explanations**: OpenAI GPT-4o-mini, Perplexity, or Gemini for human-readable analysis
 - **URL Support**: Automatic article extraction from URLs
 - **Credibility Score**: 0-100 scale with detailed probability breakdown
+- **Dashboard**: Track prediction history with visualizations
+- **Persistent Storage**: SQLite database for history tracking
 
-## How It Works
+## UI Features
 
-1. Enter a news article URL, title, or text
-2. Model analyzes content using transformer-based classification
-3. Cross-references with external fact-checkers (Google Fact Check API)
-4. Generates explanation using LLM (OpenAI/Perplexity/Gemini)
-5. Returns credibility score and detailed analysis
+This Space uses the full **Streamlit interface** with:
+- 📊 Two-tab layout (Predict + Dashboard)
+- 📈 Prediction history with charts
+- 🔗 URL text extraction
+- 💾 Persistent database
+- 🎨 Custom styling
 
 ## Model Details
 
@@ -42,30 +43,22 @@ FakeScope combines machine learning (DistilBERT), external fact-checking APIs (G
 
 This Space requires API keys (set in Settings → Repository secrets):
 
+- **Required**:
+  - `GOOGLE_FACTCHECK_API_KEY` - For fact-check verification
+  - `FAKESCOPE_MODEL_DIR` - Set to `enri-est/fakescope-distilbert-2stage`
+
 - **LLM Provider** (choose one):
-  - `OPENAI_API_KEY` - For GPT-4o-mini explanations
-  - `PERPLEXITY_API_KEY` - For Perplexity with web search
-  - `GEMINI_API_KEY` - For Google Gemini (generous free tier)
-- `GOOGLE_FACTCHECK_API_KEY` - For fact-check verification
-- `FAKESCOPE_LLM_PROVIDER` - Set to "openai", "perplexity", or "gemini" (default: "openai")
+  - `GEMINI_API_KEY` + `FAKESCOPE_LLM_PROVIDER=gemini` (recommended, free tier)
+  - `OPENAI_API_KEY` + `FAKESCOPE_LLM_PROVIDER=openai`
+  - `PERPLEXITY_API_KEY` + `FAKESCOPE_LLM_PROVIDER=perplexity`
 
-## Usage Example
+## Usage
 
-```python
-# Input
-url = "https://example.com/news-article"
-text = "Breaking news: Scientists discover..."
-
-# Output
-{
-  "credibility": 78.5,  # 0-100 scale
-  "prob_true": 0.785,
-  "prob_fake": 0.215,
-  "google_score": 0.82,
-  "fact_checks": [...],
-  "explanation": "Based on the analysis..."
-}
-```
+1. Navigate to the **Predict** tab
+2. Enter a news article URL, or paste text directly
+3. Click "Run Analysis"
+4. View credibility score, fact-checks, and LLM explanation
+5. Check the **Dashboard** tab to see prediction history
 
 ## Limitations
 
@@ -80,4 +73,4 @@ GitHub: [enriest/FakeScope](https://github.com/enriest/FakeScope)
 
 ## License
 
-MIT License - See repository for details
+MIT License

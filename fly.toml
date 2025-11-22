@@ -6,10 +6,17 @@ primary_region = "iad"
 [env]
   PORT = "8080"
   FAKESCOPE_DB_PATH = "/data/predictions.db"
+  # Model downloads to /data and is cached between deployments
+  HF_HOME = "/data/.cache/huggingface"
 
 [mounts]
   source = "fakescope_data"
   destination = "/data"
+
+[vm]
+  memory = "2gb"
+  cpu_kind = "shared"
+  cpus = 1
 
 [[services]]
   internal_port = 8080
