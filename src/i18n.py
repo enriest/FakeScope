@@ -141,6 +141,10 @@ TRANSLATIONS = {
         "key_topics": "🏷️ Key Topics",
         "no_keywords_identified": "No significant keywords identified",
         "provider_changed_run_again": "LLM provider changed. Click 'Run Analysis' to generate a new explanation.",
+        "key_differences_title": "🎯 Key Differences",
+        "key_differences_body": """Compare how each model approaches the analysis:\n- **Depth of explanation**: Which provides more detail?\n- **Source usage**: Which cites more external sources?\n- **Confidence level**: Which is more certain in its verdict?\n- **Writing style**: Which is clearer or more professional?""",
+        "gemini_api_missing": "Gemini API key not set. Add GEMINI_API_KEY in Space settings.",
+        "gemini_api_failed": "Gemini request failed. Check key, model name, or quota.",
     },
     
     "es": {
@@ -276,6 +280,10 @@ TRANSLATIONS = {
         "key_topics": "🏷️ Temas Clave",
         "no_keywords_identified": "No se identificaron palabras clave significativas",
         "provider_changed_run_again": "El proveedor de IA cambió. Pulsa 'Ejecutar Análisis' para generar una nueva explicación.",
+        "key_differences_title": "🎯 Diferencias Clave",
+        "key_differences_body": """Compara cómo cada modelo aborda el análisis:\n- **Profundidad de la explicación**: ¿Cuál aporta más detalle?\n- **Uso de fuentes**: ¿Cuál cita más fuentes externas?\n- **Nivel de confianza**: ¿Cuál muestra más certeza en su veredicto?\n- **Estilo de escritura**: ¿Cuál es más claro o profesional?""",
+        "gemini_api_missing": "Clave de API de Gemini no configurada. Añade GEMINI_API_KEY en la configuración del Space.",
+        "gemini_api_failed": "La solicitud a Gemini falló. Verifica la clave, el nombre del modelo o el cupo.",
     },
     
     "fr": {
@@ -410,6 +418,10 @@ TRANSLATIONS = {
         "key_topics": "🏷️ Sujets Clés",
         "no_keywords_identified": "Aucun mot-clé significatif identifié",
         "provider_changed_run_again": "Le fournisseur IA a changé. Cliquez sur 'Lancer l'Analyse' pour une nouvelle explication.",
+        "key_differences_title": "🎯 Différences Clés",
+        "key_differences_body": """Comparez comment chaque modèle aborde l'analyse :\n- **Profondeur de l'explication** : Lequel apporte le plus de détails ?\n- **Utilisation des sources** : Lequel cite le plus de sources externes ?\n- **Niveau de confiance** : Lequel est le plus sûr de son verdict ?\n- **Style d'écriture** : Lequel est le plus clair ou professionnel ?""",
+        "gemini_api_missing": "Clé API Gemini non définie. Ajoutez GEMINI_API_KEY dans les paramètres du Space.",
+        "gemini_api_failed": "Échec de la requête Gemini. Vérifiez la clé, le nom du modèle ou le quota.",
     },
     
     "de": {
@@ -544,6 +556,10 @@ TRANSLATIONS = {
         "key_topics": "🏷️ Schlüsselthemen",
         "no_keywords_identified": "Keine bedeutenden Schlüsselwörter identifiziert",
         "provider_changed_run_again": "LLM-Anbieter geändert. Klicken Sie auf 'Analyse Starten' für eine neue Erklärung.",
+        "key_differences_title": "🎯 Wichtige Unterschiede",
+        "key_differences_body": """Vergleichen Sie, wie jedes Modell die Analyse angeht:\n- **Tiefe der Erklärung**: Welches bietet mehr Detail?\n- **Quellennutzung**: Welches zitiert mehr externe Quellen?\n- **Vertrauensniveau**: Welches ist sicherer im Urteil?\n- **Schreibstil**: Welches ist klarer oder professioneller?""",
+        "gemini_api_missing": "Gemini API-Schlüssel nicht gesetzt. Fügen Sie GEMINI_API_KEY in den Space-Einstellungen hinzu.",
+        "gemini_api_failed": "Gemini-Anfrage fehlgeschlagen. Schlüssel, Modellname oder Kontingent prüfen.",
     },
     
     "ru": {
@@ -678,6 +694,10 @@ TRANSLATIONS = {
         "key_topics": "🏷️ Ключевые Темы",
         "no_keywords_identified": "Значимые ключевые слова не обнаружены",
         "provider_changed_run_again": "Провайдер LLM изменён. Нажмите 'Запустить Анализ' для нового объяснения.",
+        "key_differences_title": "🎯 Ключевые Отличия",
+        "key_differences_body": """Сравните подход моделей к анализу:\n- **Глубина объяснения**: Какая даёт больше деталей?\n- **Использование источников**: Какая цитирует больше внешних источников?\n- **Уровень уверенности**: Какая более уверена в вердикте?\n- **Стиль письма**: Какая яснее или профессиональнее?""",
+        "gemini_api_missing": "API-ключ Gemini не задан. Добавьте GEMINI_API_KEY в настройках Space.",
+        "gemini_api_failed": "Запрос к Gemini не удался. Проверьте ключ, имя модели или квоту.",
     },
     
     "pt": {
@@ -812,6 +832,10 @@ TRANSLATIONS = {
         "key_topics": "🏷️ Tópicos Chave",
         "no_keywords_identified": "Nenhuma palavra-chave significativa identificada",
         "provider_changed_run_again": "Provedor LLM alterado. Clique em 'Executar Análise' para uma nova explicação.",
+        "key_differences_title": "🎯 Diferenças Principais",
+        "key_differences_body": """Compare como cada modelo aborda a análise:\n- **Profundidade da explicação**: Qual fornece mais detalhes?\n- **Uso de fontes**: Qual cita mais fontes externas?\n- **Nível de confiança**: Qual demonstra mais certeza no veredicto?\n- **Estilo de escrita**: Qual é mais claro ou profissional?""",
+        "gemini_api_missing": "Chave da API Gemini não definida. Adicione GEMINI_API_KEY nas configurações do Space.",
+        "gemini_api_failed": "Falha na requisição Gemini. Verifique a chave, nome do modelo ou quota.",
     },
 }
 
