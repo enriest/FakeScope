@@ -153,13 +153,18 @@ User wants to discuss: {user_message}
                     url = f"https://generativelanguage.googleapis.com/v1/models/{model_name}:generateContent"
                     payload = {
                         "contents": [{
-                            "role": "user",
                             "parts": [{"text": conversation}]
                         }],
                         "generationConfig": {
                             "temperature": 0.7,
                             "maxOutputTokens": 800
-                        }
+                        },
+                        "safetySettings": [
+                            {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+                            {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+                            {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+                            {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"}
+                        ]
                     }
                     resp = requests.post(url, params={"key": gemini_key}, json=payload, timeout=20)
                     
@@ -172,10 +177,18 @@ User wants to discuss: {user_message}
                             result = "\n".join([t for t in texts if t]).strip()
                             if result:
                                 return result
+                        # No candidates - check for safety ratings or blocks
+                        last_error = f"{model_name}: No candidates (possibly blocked). Response: {data}"
                     else:
-                        last_error = f"{model_name}: HTTP {resp.status_code}"
+                        # Try to get error details from response
+                        try:
+                            error_data = resp.json()
+                            error_msg = error_data.get("error", {}).get("message", resp.text[:200])
+                            last_error = f"{model_name}: HTTP {resp.status_code} - {error_msg}"
+                        except:
+                            last_error = f"{model_name}: HTTP {resp.status_code} - {resp.text[:200]}"
                 except Exception as e:
-                    last_error = f"{model_name}: {str(e)}"
+                    last_error = f"{model_name}: Exception - {str(e)}"
                     continue
             
             # If all models failed, return error
