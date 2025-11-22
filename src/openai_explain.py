@@ -19,7 +19,7 @@ except Exception:
 # Environment variables for LLM configuration
 OPENAI_MODEL = os.getenv("FAKESCOPE_OPENAI_MODEL", "gpt-4o-mini")
 PERPLEXITY_MODEL = os.getenv("FAKESCOPE_PERPLEXITY_MODEL", "sonar-pro")
-GEMINI_MODEL = os.getenv("FAKESCOPE_GEMINI_MODEL", "gemini-1.5-flash")
+GEMINI_MODEL = os.getenv("FAKESCOPE_GEMINI_MODEL", "gemini-2.5-flash")
 LLM_PROVIDER = os.getenv(
     "FAKESCOPE_LLM_PROVIDER", "openai"
 )  # Options: "openai", "perplexity", or "gemini"
@@ -73,13 +73,13 @@ def _gemini_list_models(api_key: str) -> List[Dict[str, Any]]:
 def _gemini_pick_candidates(
     preferred: Optional[str], api_key: Optional[str]
 ) -> List[str]:
-    # Reasonable fallback order covering common SKUs and aliases
+    # Reasonable fallback order covering current 2025 models
     base_order = [
-        "gemini-1.5-flash",
-        "gemini-1.5-flash-latest",
-        "gemini-1.5-flash-8b",
-        "gemini-1.5-pro",
-        "gemini-1.5-pro-latest",
+        "gemini-2.5-flash",
+        "gemini-2.0-flash",
+        "gemini-2.5-flash-lite",
+        "gemini-2.5-pro",
+        "gemini-2.0-flash-lite",
     ]
     # Start with preferred if provided
     candidates = []

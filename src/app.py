@@ -139,8 +139,8 @@ User wants to discuss: {user_message}
             if not gemini_key:
                 return "Gemini API not configured. Set GEMINI_API_KEY environment variable."
             
-            # Try with gemini-1.5-flash-latest first, then fallback
-            models_to_try = ["gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-1.5-flash-8b"]
+            # Try with gemini-2.5-flash first (best price-performance), then fallback
+            models_to_try = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.5-flash-lite"]
             
             conversation = context_msg + "\n\nConversation:\n"
             for msg in chat_history[-6:]:
