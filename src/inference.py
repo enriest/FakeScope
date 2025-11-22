@@ -19,11 +19,19 @@ def _load_model_and_tokenizer():
     if not os.path.exists(config_path):
         # Allow treating MODEL_DIR as a Hugging Face Hub repo ID if it contains a slash
         if "/" in MODEL_DIR and not os.path.isdir(MODEL_DIR):
-            tokenizer = AutoTokenizer.from_pretrained(MODEL_DIR, token=hf_token)
-            model = AutoModelForSequenceClassification.from_pretrained(MODEL_DIR, token=hf_token)
+            try:
+                tokenizer = AutoTokenizer.from_pretrained(MODEL_DIR, token=hf_token, trust_remote_code=False)
+                model = AutoModelForSequenceClassification.from_pretrained(MODEL_DIR, token=hf_token, trust_remote_code=False)
+            except Exception as e:
+                raise FileNotFoundError(
+                    f"Failed to load model from Hugging Face Hub '{MODEL_DIR}'. "
+                    f"Error: {e}. "
+                    f"Make sure FAKESCOPE_MODEL_DIR is set correctly (e.g., 'enri-est/fakescope-distilbert-2stage') "
+                    f"and the model exists on Hugging Face."
+                )
         else:
             raise FileNotFoundError(
-                f"Model not found at '{MODEL_DIR}'. Provide local directory or set FAKESCOPE_MODEL_DIR to a Hugging Face repo id (e.g., 'org/model')."
+                f"Model not found at '{MODEL_DIR}'. Provide local directory or set FAKESCOPE_MODEL_DIR to a Hugging Face repo id (e.g., 'enri-est/fakescope-distilbert-2stage')."
             )
     else:
         tokenizer = AutoTokenizer.from_pretrained(MODEL_DIR)
