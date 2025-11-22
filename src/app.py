@@ -108,21 +108,31 @@ User wants to discuss: {user_message}
         if provider == "gemini":
             client = _build_gemini_client()
             if not client:
-                return "Gemini API not configured."
+                return "Gemini API not configured. Set GEMINI_API_KEY environment variable."
             
-            model = client.GenerativeModel(
-                model_name=GEMINI_MODEL,
-                generation_config={"temperature": 0.7, "max_output_tokens": 800}
-            )
-            
-            # Build full conversation
-            conversation = context_msg + "\n\nConversation:\n"
-            for msg in chat_history[-6:]:  # Last 3 exchanges
-                conversation += f"{msg['role'].title()}: {msg['content']}\n"
-            conversation += f"User: {user_message}\nAssistant:"
-            
-            response = model.generate_content(conversation)
-            return response.text.strip()
+            try:
+                model = client.GenerativeModel(
+                    model_name=GEMINI_MODEL,
+                    generation_config={"temperature": 0.7, "max_output_tokens": 800}
+                )
+                
+                # Build full conversation
+                conversation = context_msg + "\n\nConversation:\n"
+                for msg in chat_history[-6:]:  # Last 3 exchanges
+                    conversation += f"{msg['role'].title()}: {msg['content']}\n"
+                conversation += f"User: {user_message}\nAssistant:"
+                
+                response = model.generate_content(conversation)
+                # Safely access text attribute (can raise ValueError if blocked/empty)
+                try:
+                    text = response.text.strip()
+                    if text:
+                        return text
+                    return "(Gemini returned empty response)"
+                except (ValueError, AttributeError) as e:
+                    return f"(Gemini response unavailable: {str(e)})"
+            except Exception as e:
+                return f"Gemini API error: {str(e)}"
             
         elif provider == "perplexity":
             client = _build_perplexity_client()
