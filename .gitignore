@@ -96,6 +96,7 @@ data/
 .DS_Store
 Thumbs.db
 desktop.ini
+.git-backup/
 
 # ============================================
 # API Keys & Secrets (CRITICAL - Never commit!)
