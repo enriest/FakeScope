@@ -12,12 +12,22 @@ MODEL_MAX_LENGTH = int(os.getenv("FAKESCOPE_MODEL_MAX_LENGTH", "512"))
 
 @lru_cache(maxsize=1)
 def _load_model_and_tokenizer():
-    if not os.path.exists(os.path.join(MODEL_DIR, "config.json")):
-        raise FileNotFoundError(
-            f"Model not found at '{MODEL_DIR}'. Ensure the folder exists in the container or set FAKESCOPE_MODEL_DIR."
-        )
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_DIR)
-    model = AutoModelForSequenceClassification.from_pretrained(MODEL_DIR)
+    # Check for Hugging Face token (for private repos)
+    hf_token = os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_TOKEN")
+    
+    config_path = os.path.join(MODEL_DIR, "config.json")
+    if not os.path.exists(config_path):
+        # Allow treating MODEL_DIR as a Hugging Face Hub repo ID if it contains a slash
+        if "/" in MODEL_DIR and not os.path.isdir(MODEL_DIR):
+            tokenizer = AutoTokenizer.from_pretrained(MODEL_DIR, token=hf_token)
+            model = AutoModelForSequenceClassification.from_pretrained(MODEL_DIR, token=hf_token)
+        else:
+            raise FileNotFoundError(
+                f"Model not found at '{MODEL_DIR}'. Provide local directory or set FAKESCOPE_MODEL_DIR to a Hugging Face repo id (e.g., 'org/model')."
+            )
+    else:
+        tokenizer = AutoTokenizer.from_pretrained(MODEL_DIR)
+        model = AutoModelForSequenceClassification.from_pretrained(MODEL_DIR)
     model.eval()
     return tokenizer, model
 

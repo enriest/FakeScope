@@ -1,11 +1,18 @@
 import os
 import time
+import logging
 from typing import Any, Dict, List, Optional
 
 import requests
 
+# Load .env automatically so GOOGLE_FACTCHECK_API_KEY is available
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    pass
 
-FACTCHECK_API_KEY = os.getenv("GOOGLE_FACTCHECK_API_KEY")
+
 FACTCHECK_ENDPOINT = "https://factchecktools.googleapis.com/v1alpha1/claims:search"
 
 # Normalization map (0.0-1.0). Extend as needed based on observed ratings.
@@ -34,9 +41,14 @@ def _normalize_rating(textual_rating: Optional[str]) -> Optional[float]:
     return _RATING_MAP.get(key)
 
 
+def _get_api_key() -> Optional[str]:
+    # Always read latest env in case the server stays up and .env/vars change
+    return os.getenv("GOOGLE_FACTCHECK_API_KEY")
+
+
 def is_configured() -> bool:
     """Return True if the Google Fact Check API key is available."""
-    return bool(FACTCHECK_API_KEY)
+    return bool(_get_api_key())
 
 
 def fetch_fact_checks(
@@ -51,14 +63,15 @@ def fetch_fact_checks(
 
     Returns list of dicts: {claim_text, textual_rating, rating_score, title, url, publisher, review_date}
     """
-    if not FACTCHECK_API_KEY:
+    api_key = _get_api_key()
+    if not api_key:
         return []
 
     params = {
         "query": claim_text,
         "languageCode": language_code,
         "pageSize": max_results,
-        "key": FACTCHECK_API_KEY,
+        "key": api_key,
     }
 
     last_err = None
@@ -94,6 +107,11 @@ def fetch_fact_checks(
         time.sleep(0.5 * (attempt + 1))
 
     # On failure, return empty array rather than raising to keep app responsive
+    try:
+        if last_err:
+            logging.warning("Google Fact Check API error: %s", last_err)
+    except Exception:
+        pass
     return []
 
 

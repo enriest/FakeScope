@@ -26,3 +26,4 @@ model_comparison_summary.json
 *.joblib
 distilbert_news_adapted
 # Keep distilbert_fakenews_2stage included (do not ignore)
+distilbert_fakenews_balanced

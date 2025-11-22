@@ -4,24 +4,18 @@ from typing import Optional, Dict, Any, List
 
 import streamlit as st
 
-# Load .env so the app picks up API keys without requiring `source .env`
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-except Exception:
-    pass
-
 from src.inference import credibility_score, predict_proba
 from src.factcheck import fetch_fact_checks, aggregate_google_score, is_configured as gc_is_configured
 from src.translate import translate_to_english
 from src.openai_explain import generate_explanation
 from src.storage import init_db, insert_prediction, fetch_recent
 from src.utils import extract_text_from_url
-from src.i18n import get_translation, detect_language_from_ip, get_language_name, SUPPORTED_LANGUAGES
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+APP_TITLE = "FakeScope – Fake News Detector"
 
 # LLM Provider descriptions
 LLM_PROVIDERS = {
@@ -159,20 +153,10 @@ User wants to discuss: {user_message}
 
 
 def main():
-    # Initialize session state early
-    if "ui_language" not in st.session_state:
-        # Try to detect language from IP on first load
-        try:
-            # Get client IP (Streamlit Cloud provides this via headers)
-            # For local development, this will return None and default to English
-            client_ip = st.context.headers.get("X-Forwarded-For", "").split(",")[0].strip()
-            if not client_ip:
-                client_ip = st.context.headers.get("X-Real-Ip", "")
-            detected_lang = detect_language_from_ip(client_ip) if client_ip else "en"
-            st.session_state.ui_language = detected_lang
-        except Exception:
-            st.session_state.ui_language = "en"
-    
+    st.set_page_config(page_title=APP_TITLE, page_icon="📰", layout="wide")
+    st.title(APP_TITLE)
+
+    # Initialize session state
     if "analysis_results" not in st.session_state:
         st.session_state.analysis_results = None
     if "chat_history" not in st.session_state:
@@ -180,104 +164,60 @@ def main():
     if "comparison_results" not in st.session_state:
         st.session_state.comparison_results = None
 
-    # Get current language
-    current_lang = st.session_state.ui_language
-    t = lambda key, **kwargs: get_translation(key, current_lang, **kwargs)
-    
-    # Page config and title
-    st.set_page_config(page_title=t("app_title"), page_icon="📰", layout="wide")
-    
-    # Title and language selector in same row
-    col_title, col_lang = st.columns([4, 1])
-    with col_title:
-        st.title(t("app_title"))
-    with col_lang:
-        # Language selector
-        lang_display = {code: get_language_name(code) for code in SUPPORTED_LANGUAGES}
-        selected_lang = st.selectbox(
-            t("language"),
-            options=SUPPORTED_LANGUAGES,
-            format_func=lambda x: lang_display[x],
-            index=SUPPORTED_LANGUAGES.index(current_lang),
-            key="language_selector"
-        )
-        
-        # Update language if changed
-        if selected_lang != current_lang:
-            st.session_state.ui_language = selected_lang
-            st.rerun()
-
-    tabs = st.tabs([
-        t("analyze_tab"),
-        t("chat_tab"),
-        t("compare_tab"),
-        t("deep_analysis_tab"),
-        t("dashboard_tab")
-    ])
+    tabs = st.tabs(["🔍 Analyze", "💬 Chat & Debate", "⚖️ Compare Models", "📊 Deep Analysis", "📈 Dashboard"])
 
     # ============================================================
     # TAB 1: ANALYZE
     # ============================================================
     with tabs[0]:
-        st.subheader(t("analyze_subtitle"))
+        st.subheader("Analyze an article or claim")
         
         # LLM Provider Selection
-        st.markdown(f"#### {t('choose_ai_model')}")
+        st.markdown("#### Choose your AI Model")
         selected_provider = st.selectbox(
-            t("llm_provider"),
+            "LLM Provider",
             options=list(LLM_PROVIDERS.keys()),
             format_func=lambda x: LLM_PROVIDERS[x]["name"],
             key="primary_provider"
         )
-
-        # If provider changed, invalidate previous analysis to avoid showing stale explanation
-        if (
-            st.session_state.get("analysis_results")
-            and st.session_state.analysis_results.get("provider") != selected_provider
-        ):
-            st.session_state.analysis_results = None
-            st.info(t("provider_changed_run_again") if callable(t) else "Provider changed. Click Run Analysis to generate a fresh explanation.")
         
         # Show provider info in expandable section
-        with st.expander(f"ℹ️ {t('why_provider')} {LLM_PROVIDERS[selected_provider]['name']}?", expanded=False):
-            # Provider description and strengths via i18n
-            st.markdown(
-                f"**{get_translation(f'provider_{selected_provider}_description', current_lang)}**"
-            )
-            st.markdown(f"**{t('strengths')}**")
-            st.markdown(get_translation(f"provider_{selected_provider}_strengths", current_lang))
-            st.caption(f"💰 {t('cost')} {LLM_PROVIDERS[selected_provider]['cost']}")
+        with st.expander(f"ℹ️ Why {LLM_PROVIDERS[selected_provider]['name']}?", expanded=False):
+            st.markdown(f"**{LLM_PROVIDERS[selected_provider]['description']}**")
+            st.markdown("**Strengths:**")
+            st.markdown(LLM_PROVIDERS[selected_provider]['strengths'])
+            st.caption(f"💰 Cost: {LLM_PROVIDERS[selected_provider]['cost']}")
         
-        url = st.text_input(t("article_url"))
-        title = st.text_input(t("title_optional"))
-        text = st.text_area(t("article_text"), height=180)
+        url = st.text_input("Article URL (optional)")
+        title = st.text_input("Title (optional)")
+        text = st.text_area("Article text or claim", height=180)
 
         # Language selection for Google Fact Check API
         lang_options = ["en","es","fr","de","it","pt","ru","ar","zh","hi"]
         col1, col2 = st.columns(2)
         with col1:
-            language = st.selectbox(t("fact_check_language"), options=lang_options, index=0)
+            language = st.selectbox("Fact Check Language", options=lang_options, index=0)
         with col2:
-            auto_translate = st.checkbox(t("auto_translate"), value=True)
+            auto_translate = st.checkbox("Auto-translate to English", value=True)
 
         if url and not text:
-            if st.button(t("fetch_from_url")):
+            if st.button("Fetch text from URL"):
                 extracted = extract_text_from_url(url)
                 if extracted:
                     st.session_state["auto_text"] = extracted
-                    st.success(t("extracted_success"))
+                    st.success("✅ Extracted text from URL")
                 else:
-                    st.warning(t("extract_failed"))
+                    st.warning("⚠️ Could not extract text")
 
         if st.session_state.get("auto_text") and not text:
             text = st.session_state["auto_text"]
-            st.text_area(t("extracted_text"), value=text, height=240, key="extracted_text", disabled=True)
+            st.text_area("Extracted text", value=text, height=240, key="extracted_text", disabled=True)
 
         col1, col2 = st.columns(2)
         with col1:
-            run = st.button(t("run_analysis"), type="primary", width="stretch")
+            run = st.button("🚀 Run Analysis", type="primary", width="stretch")
         with col2:
-            clear = st.button(t("clear"), width="stretch")
+            clear = st.button("🗑️ Clear", width="stretch")
 
         if clear:
             st.session_state.pop("auto_text", None)
@@ -287,10 +227,10 @@ def main():
 
         if run:
             if not (text or title or url):
-                st.error(t("provide_input_error"))
+                st.error("⚠️ Please provide a URL, title, or text to analyze.")
             else:
                 base_text = text or title or url
-                with st.spinner(f"{t('analyzing')} {LLM_PROVIDERS[selected_provider]['name']}..."):
+                with st.spinner(f"🔄 Analyzing with {LLM_PROVIDERS[selected_provider]['name']}..."):
                     model_input = base_text
                     translated_used = False
                     
@@ -315,7 +255,7 @@ def main():
                         "g_score": g_score,
                         "explanation": explanation,
                         "provider": selected_provider,
-                        "verdict": t("true") if cred >= 50 else t("fake"),
+                        "verdict": "TRUE" if cred >= 50 else "FAKE",
                         "translated": translated_used,
                         "language": language
                     }
@@ -325,45 +265,41 @@ def main():
             results = st.session_state.analysis_results
             
             st.markdown("---")
-            st.markdown(f"### {t('results')}")
+            st.markdown("### 📊 Results")
             
             # Verdict badge
             verdict_color = "🟢" if results["cred"] >= 70 else "🟡" if results["cred"] >= 40 else "🔴"
-            st.markdown(f"## {verdict_color} {t('verdict')} **{results['verdict']}**")
+            st.markdown(f"## {verdict_color} Verdict: **{results['verdict']}**")
             
             col1, col2, col3 = st.columns(3)
             with col1:
-                st.metric(t("credibility_score"), f"{results['cred']:.1f}/100")
+                st.metric("Credibility Score", f"{results['cred']:.1f}/100")
             with col2:
-                st.metric(t("fake_probability"), f"{results['model_scores']['fake']:.1%}")
+                st.metric("Fake Probability", f"{results['model_scores']['fake']:.1%}")
             with col3:
-                st.metric(t("true_probability"), f"{results['model_scores']['true']:.1%}")
+                st.metric("True Probability", f"{results['model_scores']['true']:.1%}")
             
             st.progress(min(max(results["model_scores"]["true"], 0.0), 1.0))
             
             if results.get("translated"):
-                st.info(t("translated_info", lang=results['language'].upper()))
+                st.info(f"✅ Text was translated from {results['language'].upper()} to English for analysis")
 
             # Google Fact Check
-            st.markdown(f"### {t('external_fact_checks')}")
+            st.markdown("### 🌐 External Fact Checks")
             if results["g_score"] is not None:
-                st.metric(t("google_fact_check_score"), f"{results['g_score']:.2f}/1.0")
+                st.metric("Google Fact Check Score", f"{results['g_score']:.2f}/1.0")
             
             if results["google_items"]:
                 for it in results["google_items"]:
                     rating = it.get('textual_rating', 'Unknown')
                     rating_icon = "✅" if "true" in rating.lower() else "❌" if "false" in rating.lower() else "⚠️"
-                    st.markdown(f"{rating_icon} **{rating}** — {it.get('publisher')} — [{t('view_source')}]({it.get('url')})")
+                    st.markdown(f"{rating_icon} **{rating}** — {it.get('publisher')} — [View Source]({it.get('url')})")
             else:
-                st.info(t("no_fact_checks"))
+                st.info("No external fact-checks found for this claim")
 
             # LLM Explanation
-            st.markdown(f"### {t('llm_explanation')}")
-            st.caption(f"{t('provided_by')} {LLM_PROVIDERS[results['provider']]['name']}")
+            st.markdown(f"### 🤖 Analysis by {LLM_PROVIDERS[results['provider']]['name']}")
             if results["explanation"]:
-                # Optional debug info if env var set
-                if os.getenv("DEBUG_UI_EXPLANATION"):
-                    st.caption(f"[debug] provider={results['provider']} chars={len(results['explanation'])}")
                 st.markdown(results["explanation"])
             else:
                 st.warning("LLM explanation not available. Check API configuration.")
@@ -372,15 +308,15 @@ def main():
     # TAB 2: CHAT & DEBATE
     # ============================================================
     with tabs[1]:
-        st.subheader(t("chat_subtitle"))
+        st.subheader("💬 Debate with the AI")
         
         if not st.session_state.analysis_results:
-            st.info(t("analyze_first"))
+            st.info("👈 Run an analysis first to start chatting!")
         else:
             results = st.session_state.analysis_results
             
-            st.markdown(f"**{t('current_verdict')}:** {results['verdict']}")
-            st.caption(f"{t('provided_by')} {LLM_PROVIDERS[results['provider']]['name']}")
+            st.markdown(f"**Discussing:** {results['original_text'][:200]}...")
+            st.caption(f"Using: {LLM_PROVIDERS[results['provider']]['name']}")
             
             # Display chat history
             chat_container = st.container()
@@ -393,13 +329,13 @@ def main():
                     st.markdown("---")
             
             # Chat input
-            user_input = st.text_area(t("your_message"), height=100, key="chat_input")
+            user_input = st.text_area("Your argument or question:", height=100, key="chat_input")
             
             col1, col2 = st.columns([1, 5])
             with col1:
-                send = st.button(t("send"), type="primary")
+                send = st.button("Send", type="primary")
             with col2:
-                clear_chat = st.button(t("clear"))
+                clear_chat = st.button("Clear Chat")
             
             if clear_chat:
                 st.session_state.chat_history = []
@@ -432,44 +368,44 @@ def main():
                     st.rerun()
             
             # Quick prompts
-            st.markdown(f"#### {t('quick_prompts_title')}")
+            st.markdown("#### 💡 Quick Prompts")
             col1, col2, col3 = st.columns(3)
             with col1:
-                    if st.button(t("quick_prompt_why")):
-                        st.session_state.chat_history.append({"role": "user", "content": t("quick_prompt_msg_why")})
+                if st.button("Why is this fake/true?"):
+                    st.session_state.chat_history.append({"role": "user", "content": "Explain in detail why you think this claim is fake or true."})
                     st.rerun()
             with col2:
-                if st.button(t("quick_prompt_evidence")):
-                    st.session_state.chat_history.append({"role": "user", "content": t("quick_prompt_msg_evidence")})
+                if st.button("Show me evidence"):
+                    st.session_state.chat_history.append({"role": "user", "content": "What specific evidence supports or contradicts this claim?"})
                     st.rerun()
             with col3:
-                if st.button(t("quick_prompt_disagree")):
-                    st.session_state.chat_history.append({"role": "user", "content": t("quick_prompt_msg_disagree")})
+                if st.button("I disagree"):
+                    st.session_state.chat_history.append({"role": "user", "content": "I disagree with your assessment. Can you consider alternative perspectives?"})
                     st.rerun()
 
     # ============================================================
     # TAB 3: COMPARE MODELS
     # ============================================================
     with tabs[2]:
-        st.subheader(t("compare_subtitle"))
+        st.subheader("⚖️ Compare Different AI Models")
         
         if not st.session_state.analysis_results:
-            st.info(t("analyze_first"))
+            st.info("👈 Run an analysis first to compare models!")
         else:
             results = st.session_state.analysis_results
             
-            st.markdown(f"**{t('model')}:** {LLM_PROVIDERS[results['provider']]['name']}")
+            st.markdown(f"**Original Analysis:** {LLM_PROVIDERS[results['provider']]['name']}")
             
             # Select second provider
             available_providers = [p for p in LLM_PROVIDERS.keys() if p != results['provider']]
             second_provider = st.selectbox(
-                t("compare_with") if hasattr(__import__('builtins'), 'True') else "Compare with:",
+                "Compare with:",
                 options=available_providers,
                 format_func=lambda x: LLM_PROVIDERS[x]["name"]
             )
             
-            if st.button(t("compare_button"), type="primary"):
-                with st.spinner(t("comparing")):
+            if st.button("🔄 Run Comparison", type="primary"):
+                with st.spinner(f"Running analysis with {LLM_PROVIDERS[second_provider]['name']}..."):
                     _, _, _, _, second_explanation = _predict_flow(
                         results["text"], results["original_text"], 
                         url=None, title=None, language=results["language"],
@@ -513,17 +449,17 @@ def main():
     # TAB 4: DEEP ANALYSIS
     # ============================================================
     with tabs[3]:
-        st.subheader(t("deep_analysis_subtitle"))
+        st.subheader("📊 Deep Analysis & Sources")
         
         if not st.session_state.analysis_results:
-            st.info(t("analyze_first"))
+            st.info("👈 Run an analysis first to see deep insights!")
         else:
             results = st.session_state.analysis_results
             
             # Source Analysis
-            st.markdown(f"### {t('source_analysis')}")
+            st.markdown("### 📰 Source Analysis")
             if results["google_items"]:
-                st.markdown(f"**{t('found_fact_checks_count', count=len(results['google_items']))}**")
+                st.markdown(f"**Found {len(results['google_items'])} external fact-checks**")
                 
                 # Count ratings
                 ratings = {}
@@ -532,48 +468,48 @@ def main():
                     ratings[rating] = ratings.get(rating, 0) + 1
                 
                 # Display rating breakdown
-                st.markdown(f"#### {t('rating_breakdown')}")
+                st.markdown("#### Rating Breakdown")
                 for rating, count in ratings.items():
                     percentage = (count / len(results["google_items"])) * 100
                     st.progress(percentage / 100)
                     st.caption(f"{rating}: {count} sources ({percentage:.1f}%)")
                 
                 # Detailed source list
-                st.markdown(f"#### {t('detailed_sources')}")
+                st.markdown("#### Detailed Sources")
                 for idx, item in enumerate(results["google_items"], 1):
-                    with st.expander(t('source_item', idx=idx, publisher=item.get('publisher', 'Unknown'))):
-                        st.markdown(f"**{t('rating_label')}:** {item.get('textual_rating', 'Unknown')}")
-                        st.markdown(f"**{t('claim_label')}:** {item.get('claim_text', 'N/A')}")
-                        st.markdown(f"**{t('url_label')}:** [{item.get('url', 'N/A')}]({item.get('url', '#')})")
-                        st.markdown(f"**{t('review_date_label')}:** {item.get('review_date', 'Unknown')}")
+                    with st.expander(f"Source {idx}: {item.get('publisher', 'Unknown')}"):
+                        st.markdown(f"**Rating:** {item.get('textual_rating', 'Unknown')}")
+                        st.markdown(f"**Claim:** {item.get('claim_text', 'N/A')}")
+                        st.markdown(f"**URL:** [{item.get('url', 'N/A')}]({item.get('url', '#')})")
+                        st.markdown(f"**Review Date:** {item.get('review_date', 'Unknown')}")
             else:
-                st.warning(t('no_external_sources'))
+                st.warning("No external sources found. This claim may be too recent or too specific.")
             
             # Model Confidence Analysis
-            st.markdown(f"### {t('model_confidence')}")
+            st.markdown("### 🎯 Model Confidence")
             import pandas as pd
             confidence_data = pd.DataFrame({
-                "Category": [t("fake"), t("true")],
+                "Category": ["Fake", "True"],
                 "Probability": [results["model_scores"]["fake"], results["model_scores"]["true"]]
             })
             st.bar_chart(confidence_data.set_index("Category"))
             
             # Text Statistics
-            st.markdown(f"### {t('text_statistics')}")
+            st.markdown("### 📈 Text Statistics")
             text = results["text"]
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.metric(t("characters"), len(text))
+                st.metric("Characters", len(text))
             with col2:
-                st.metric(t("words"), len(text.split()))
+                st.metric("Words", len(text.split()))
             with col3:
-                st.metric(t("sentences"), text.count('.') + text.count('!') + text.count('?'))
+                st.metric("Sentences", text.count('.') + text.count('!') + text.count('?'))
             with col4:
                 avg_word_len = sum(len(word) for word in text.split()) / len(text.split()) if text.split() else 0
-                st.metric(t("avg_word_length"), f"{avg_word_len:.1f}")
+                st.metric("Avg Word Length", f"{avg_word_len:.1f}")
             
             # Related Topics/Keywords
-            st.markdown(f"### {t('key_topics')}")
+            st.markdown("### 🏷️ Key Topics")
             # Extract potential topics (simple approach)
             words = text.lower().split()
             common_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were'}
@@ -583,25 +519,25 @@ def main():
                 unique_keywords = list(dict.fromkeys(keywords))[:10]
                 st.write(", ".join([f"`{k}`" for k in unique_keywords]))
             else:
-                st.info(t("no_keywords_identified"))
+                st.info("No significant keywords identified")
 
     # ============================================================
     # TAB 5: DASHBOARD
     # ============================================================
     with tabs[4]:
-        st.subheader(t("dashboard_subtitle"))
+        st.subheader("📈 Recent Analyses")
         rows = fetch_recent(limit=200)
         if rows:
             st.dataframe(rows, width="stretch", hide_index=True)
             try:
                 import pandas as pd
                 df = pd.DataFrame(rows)
-                st.markdown(f"#### {t('credibility_score')}")
+                st.markdown("#### Credibility Score Over Time")
                 st.line_chart(df.set_index("ts")["model_true"], height=220)
             except Exception:
                 pass
         else:
-            st.info(t("no_data"))
+            st.info("No results yet. Run an analysis first.")
 
 
 if __name__ == "__main__":

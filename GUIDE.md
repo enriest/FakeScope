@@ -94,24 +94,6 @@ git --version      # Should show Git version
    - "Create Credentials" → "API Key"
    - Copy the API key
 
-**Store keys temporarily**:
-```bash
-# Add to your ~/.zshrc or ~/.bashrc for easy access
-export OPENAI_API_KEY="sk-your-openai-key-here"  # If using OpenAI
-export PERPLEXITY_API_KEY="pplx-your-perplexity-key-here"  # If using Perplexity
-export GOOGLE_FACTCHECK_API_KEY="your-google-key-here"
-
-# Choose LLM provider (default: openai)
-export FAKESCOPE_LLM_PROVIDER="openai"  # Options: "openai" or "perplexity"
-
-# Optional: Customize models
-export FAKESCOPE_OPENAI_MODEL="gpt-4o-mini"  # Default model for OpenAI
-export FAKESCOPE_PERPLEXITY_MODEL="llama-3.1-sonar-large-128k-online"  # Default for Perplexity
-
-# Reload shell
-source ~/.zshrc
-```
-
 #### Google Gemini API Key (Alternative to OpenAI/Perplexity - for LLM explanations)
 1. Go to https://ai.google.dev/
 2. Click "Get API key in Google AI Studio"
@@ -199,7 +181,60 @@ vocab.txt
 
 **If model is missing**: You need to train it first using `Project.ipynb` or download from your storage.
 
-### 2.5 Test Inference Module
+### 2.4.1 (Recommended) Upload Model to Hugging Face Hub for Remote Loading
+
+To reduce Docker image size and enable cloud deployment, you can upload your model to the Hugging Face Hub and load it remotely.
+
+**Step-by-Step:**
+
+1. **Get your Hugging Face write token:**
+   - Go to https://huggingface.co/settings/tokens
+   - Click "New token" → Select "Write" access
+   - Copy the token (starts with `hf_...`)
+
+2. **Install and authenticate:**
+   ```bash
+   pip install huggingface_hub
+   export HF_TOKEN=hf_xxxxxxxxxxxxx  # Paste your actual token here
+   ```
+
+3. **Upload your model** (replace `YOUR_USERNAME` with your Hugging Face username):
+   ```bash
+   python scripts/upload_model_hf.py \
+     --repo-id YOUR_USERNAME/fakescope-distilbert-2stage \
+     --model-dir distilbert_fakenews_2stage \
+     --private
+   ```
+   
+   **Example:** If your username is `johndoe`:
+   ```bash
+   python scripts/upload_model_hf.py \
+     --repo-id johndoe/fakescope-distilbert-2stage \
+     --model-dir distilbert_fakenews_2stage \
+     --private
+   ```
+
+4. **Configure FakeScope to use the remote model:**
+   ```bash
+   export FAKESCOPE_MODEL_DIR=YOUR_USERNAME/fakescope-distilbert-2stage
+   ```
+
+5. **Test it works:**
+   ```bash
+   python - <<'PY'
+   from src.inference import credibility_score
+   print(credibility_score('Remote loading test'))
+   PY
+   ```
+
+FakeScope will automatically download and cache the model from Hugging Face Hub at runtime.
+
+**Troubleshooting:**
+- **"Repository Not Found" error**: You need to replace `YOUR_USERNAME` with your actual Hugging Face username
+- **403 error**: Ensure your token has write access
+- **Slow first run**: Model downloads on first use, then caches locally
+
+**Tip:** For Fly.io or Docker deployments, omit the local model directory from your image to save ~270MB.### 2.5 Test Inference Module
 
 **Purpose**: Verify model loading and prediction work.
 
@@ -209,6 +244,14 @@ from src.inference import credibility_score
 score = credibility_score('Scientists discover new renewable energy breakthrough')
 print(f'Credibility: {score:.1f}/100')
 "
+```
+OR
+```
+python3 - <<'PY'
+from src.inference import credibility_score
+score = credibility_score('Scientists discover new renewable energy breakthrough')
+print(f'Credibility: {score:.1f}/100')
+PY
 ```
 
 **Expected**: Should print a credibility score without errors.
@@ -220,6 +263,22 @@ print(f'Credibility: {score:.1f}/100')
 ```bash
 streamlit run src/app.py
 ```
+source .venv311/bin/activate && python -m streamlit run src/app.py
+
+**Ensure environment secrets IP are set in flyctl** (in same terminal):
+```bash
+flyctl secrets set FAKESCOPE_LLM_PROVIDER=perplexity
+flyctl secrets set PERPLEXITY_API_KEY=pplx-xxxxxxxx
+flyctl secrets list
+```
+
+**Redeploy to fly.io with:**
+```bash
+flyctl deploy
+flyctl logs --limit 50
+```
+
+
 
 **What happens**:
 - Streamlit starts on http://localhost:8501 (default)

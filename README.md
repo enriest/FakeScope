@@ -71,13 +71,70 @@ This approach yields `distilbert_fakenews_2stage/` with 98-99.5% accuracy vs. 97
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                        DATA PIPELINE                             │
-├─────────────────────────────────────────────────────────────────┤
-│  CSV Files → DataLoader → TextPreprocessor → LabelNormalizer   │
-│                           ↓                                      │
-│                    DataSplitter (GroupShuffleSplit)             │
-│                     ↓                    ↓                       │
-│                Train Set (75%)      Test Set (25%)              │
-└─────────────────────────────────────────────────────────────────┘
+### Local Model Loading (Default)
+By default, FakeScope loads the model from the local directory `distilbert_fakenews_2stage/`. If you want to use a custom model, set the environment variable:
+
+```bash
+export FAKESCOPE_MODEL_DIR=/path/to/your/model_dir
+```
+
+This directory must contain the Hugging Face Transformers format (config.json, model.safetensors, tokenizer files, etc).
+
+### Remote Model Loading (Recommended for Deployment)
+To reduce Docker image size and enable cloud deployment, you can upload your model to the Hugging Face Hub and load it remotely.
+
+**Step-by-Step Instructions:**
+
+1. **Get your Hugging Face write token:**
+   - Go to https://huggingface.co/settings/tokens
+   - Click "New token" → Select "Write" access
+   - Copy the token (starts with `hf_...`)
+
+2. **Install and authenticate:**
+   ```bash
+   pip install huggingface_hub
+   export HF_TOKEN=hf_xxxxxxxxxxxxx  # Paste your actual token here
+   ```
+
+3. **Upload your model** (replace `YOUR_USERNAME` with your Hugging Face username):
+   ```bash
+   python scripts/upload_model_hf.py \
+     --repo-id YOUR_USERNAME/fakescope-distilbert-2stage \
+     --model-dir distilbert_fakenews_2stage \
+     --private
+   ```
+   
+   **Example:** If your username is `enriest`:
+   ```bash
+   python scripts/upload_model_hf.py \
+     --repo-id enriest/fakescope-distilbert-2stage \
+     --model-dir distilbert_fakenews_2stage \
+     --private
+   ```
+   
+   Remove `--private` to make the model public.
+
+4. **Configure FakeScope to use the remote model:**
+   ```bash
+   export FAKESCOPE_MODEL_DIR=YOUR_USERNAME/fakescope-distilbert-2stage
+   ```
+
+5. **Test remote loading:**
+   ```bash
+   python - <<'PY'
+   from src.inference import credibility_score
+   print(credibility_score('Remote loading test'))
+   PY
+   ```
+
+FakeScope will automatically download and cache the model from Hugging Face Hub at runtime.
+
+**Troubleshooting:**
+- **"Repository Not Found" error**: You need to replace `YOUR_USERNAME` with your actual Hugging Face username
+- **403 error**: Check token has write access and matches repo visibility
+- **Slow first inference**: Initial download; subsequent runs are cached
+
+**Tip:** For Fly.io or Docker deployments, omit the local model directory from your image to save ~270MB.
                             ↓
 ┌─────────────────────────────────────────────────────────────────┐
 │                   FEATURE EXTRACTION                             │
@@ -515,6 +572,45 @@ print(f"Credibility: {model_score}/100\nExplanation: {explanation}")
 FakeScope is currently a **research-grade project** optimized for Jupyter notebook experimentation. To move to production, follow the deployment roadmap below.
 
 The app is now containerized with a Streamlit UI and ready for Fly.io. See `DEPLOYMENT.md` for step-by-step instructions (Docker build, secrets, deploy). A FastAPI backend runs on port 8001 for future API use (exposed only if configured).
+
+### Publishing the Model to Hugging Face Hub (Optional Optimization)
+
+To slim Docker images and enable remote fetching, publish the trained model directory `distilbert_fakenews_2stage/` to the Hugging Face Hub and set `FAKESCOPE_MODEL_DIR` to the repo ID.
+
+#### 1. Install dependency
+```bash
+pip install huggingface_hub
+```
+#### 2. Authenticate (write token)
+```bash
+export HF_TOKEN=hf_xxx_your_write_token
+```
+#### 3. Upload using helper script
+```bash
+python scripts/upload_model_hf.py --repo-id YOUR_USER/fakescope-distilbert-2stage \
+  --model-dir distilbert_fakenews_2stage --private
+```
+Remove `--private` if you want a public model.
+
+#### 4. Point inference to remote model
+```bash
+export FAKESCOPE_MODEL_DIR=YOUR_USER/fakescope-distilbert-2stage
+```
+
+#### 5. Test remote loading
+```bash
+python - <<'PY'
+from src.inference import credibility_score
+print(credibility_score('Remote loading test claim'))
+PY
+```
+
+If successful, you can omit copying the local model directory in your Dockerfile (already supported by remote fallback) reducing build context and image size.
+
+Troubleshooting:
+- 403 errors: Ensure the token has write access and matches repo visibility.
+- `FileNotFoundError`: Confirm `FAKESCOPE_MODEL_DIR` exactly equals the repo ID (`user/name`).
+- Slow first inference: Initial download; subsequent runs are cached in container layer.
 
 ## 🌐 Language Support
 
