@@ -7,3 +7,4 @@ beautifulsoup4>=4.12.3,<5.0.0
 lxml>=5.3.0
 huggingface-hub>=0.25.0
 safetensors>=0.4.5
+deep-translator>=1.11.4,<2.0.0
