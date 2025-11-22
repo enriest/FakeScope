@@ -18,7 +18,7 @@ except Exception:
 # Environment variables for LLM configuration
 OPENAI_MODEL = os.getenv("FAKESCOPE_OPENAI_MODEL", "gpt-4o-mini")
 PERPLEXITY_MODEL = os.getenv("FAKESCOPE_PERPLEXITY_MODEL", "sonar-pro")
-GEMINI_MODEL = os.getenv("FAKESCOPE_GEMINI_MODEL", "gemini-1.5-flash-8b")
+GEMINI_MODEL = os.getenv("FAKESCOPE_GEMINI_MODEL", "gemini-1.5-flash")
 LLM_PROVIDER = os.getenv("FAKESCOPE_LLM_PROVIDER", "openai")  # Options: "openai", "perplexity", or "gemini"
 
 # Logger setup (inherits root level; app config sets level)
