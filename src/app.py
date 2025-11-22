@@ -133,33 +133,53 @@ User wants to discuss: {user_message}
 
     try:
         if provider == "gemini":
-            client = _build_gemini_client()
-            if not client:
+            # Use REST API directly to avoid SDK v1beta issues
+            import requests
+            gemini_key = os.getenv("GEMINI_API_KEY")
+            if not gemini_key:
                 return "Gemini API not configured. Set GEMINI_API_KEY environment variable."
-
-            try:
-                model = client.GenerativeModel(
-                    model_name=GEMINI_MODEL,
-                    generation_config={"temperature": 0.7, "max_output_tokens": 800},
-                )
-
-                # Build full conversation
-                conversation = context_msg + "\n\nConversation:\n"
-                for msg in chat_history[-6:]:  # Last 3 exchanges
-                    conversation += f"{msg['role'].title()}: {msg['content']}\n"
-                conversation += f"User: {user_message}\nAssistant:"
-
-                response = model.generate_content(conversation)
-                # Safely access text attribute (can raise ValueError if blocked/empty)
+            
+            # Try with gemini-1.5-flash-latest first, then fallback
+            models_to_try = ["gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-1.5-flash-8b"]
+            
+            conversation = context_msg + "\n\nConversation:\n"
+            for msg in chat_history[-6:]:
+                conversation += f"{msg['role'].title()}: {msg['content']}\n"
+            conversation += f"User: {user_message}\nAssistant:"
+            
+            last_error = None
+            for model_name in models_to_try:
                 try:
-                    text = response.text.strip()
-                    if text:
-                        return text
-                    return "(Gemini returned empty response)"
-                except (ValueError, AttributeError) as e:
-                    return f"(Gemini response unavailable: {str(e)})"
-            except Exception as e:
-                return f"Gemini API error: {str(e)}"
+                    url = f"https://generativelanguage.googleapis.com/v1/models/{model_name}:generateContent"
+                    payload = {
+                        "contents": [{
+                            "role": "user",
+                            "parts": [{"text": conversation}]
+                        }],
+                        "generationConfig": {
+                            "temperature": 0.7,
+                            "maxOutputTokens": 800
+                        }
+                    }
+                    resp = requests.post(url, params={"key": gemini_key}, json=payload, timeout=20)
+                    
+                    if resp.ok:
+                        data = resp.json()
+                        candidates = data.get("candidates", [])
+                        if candidates:
+                            parts = candidates[0].get("content", {}).get("parts", [])
+                            texts = [p.get("text", "") for p in parts if isinstance(p, dict)]
+                            result = "\n".join([t for t in texts if t]).strip()
+                            if result:
+                                return result
+                    else:
+                        last_error = f"{model_name}: HTTP {resp.status_code}"
+                except Exception as e:
+                    last_error = f"{model_name}: {str(e)}"
+                    continue
+            
+            # If all models failed, return error
+            return f"Gemini API error. Tried models: {', '.join(models_to_try)}. Last error: {last_error}"
 
         elif provider == "perplexity":
             client = _build_perplexity_client()
