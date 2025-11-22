@@ -1,15 +1,16 @@
-import os
+import json
 import logging
+import os
 from typing import Any, Dict, List, Optional
 
 import openai
-from openai import OpenAI
-import json
 import requests
+from openai import OpenAI
 
 # Load .env automatically if present so API keys are available
 try:
     from dotenv import load_dotenv
+
     load_dotenv()
 except Exception:
     pass
@@ -19,7 +20,9 @@ except Exception:
 OPENAI_MODEL = os.getenv("FAKESCOPE_OPENAI_MODEL", "gpt-4o-mini")
 PERPLEXITY_MODEL = os.getenv("FAKESCOPE_PERPLEXITY_MODEL", "sonar-pro")
 GEMINI_MODEL = os.getenv("FAKESCOPE_GEMINI_MODEL", "gemini-1.5-flash-8b")
-LLM_PROVIDER = os.getenv("FAKESCOPE_LLM_PROVIDER", "openai")  # Options: "openai", "perplexity", or "gemini"
+LLM_PROVIDER = os.getenv(
+    "FAKESCOPE_LLM_PROVIDER", "openai"
+)  # Options: "openai", "perplexity", or "gemini"
 
 # Logger setup (inherits root level; app config sets level)
 logger = logging.getLogger(__name__)
@@ -48,6 +51,7 @@ def _build_gemini_client():
         return None
     try:
         import google.generativeai as genai
+
         genai.configure(api_key=api_key)
         return genai
     except ImportError:
@@ -66,7 +70,9 @@ def _gemini_list_models(api_key: str) -> List[Dict[str, Any]]:
     return []
 
 
-def _gemini_pick_candidates(preferred: Optional[str], api_key: Optional[str]) -> List[str]:
+def _gemini_pick_candidates(
+    preferred: Optional[str], api_key: Optional[str]
+) -> List[str]:
     # Reasonable fallback order covering common SKUs and aliases
     base_order = [
         "gemini-1.5-flash",
@@ -93,11 +99,15 @@ def _gemini_pick_candidates(preferred: Optional[str], api_key: Optional[str]) ->
             if "generateContent" in methods and name.startswith("models/"):
                 supported.add(name.split("/", 1)[1])
         if supported:
-            candidates = [m for m in candidates if m in supported] + [m for m in supported if m not in candidates]
+            candidates = [m for m in candidates if m in supported] + [
+                m for m in supported if m not in candidates
+            ]
     return candidates
 
 
-def _gemini_generate_via_rest(model: str, prompt: str, temperature: float, max_tokens: int) -> Optional[str]:
+def _gemini_generate_via_rest(
+    model: str, prompt: str, temperature: float, max_tokens: int
+) -> Optional[str]:
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         return None
@@ -122,7 +132,7 @@ def _gemini_generate_via_rest(model: str, prompt: str, temperature: float, max_t
         cands = data.get("candidates") or []
         if not cands:
             return None
-        parts = (((cands[0] or {}).get("content") or {}).get("parts") or [])
+        parts = ((cands[0] or {}).get("content") or {}).get("parts") or []
         texts = [p.get("text", "") for p in parts if isinstance(p, dict)]
         return "\n".join([t for t in texts if t]).strip() or None
     except Exception:
@@ -145,13 +155,13 @@ def generate_explanation(
     """
     Use OpenAI, Perplexity, or Google Gemini API to generate a concise explanation combining model result and fact-check evidence.
     Returns empty string if no API key is configured.
-    
+
     LLM provider is selected via FAKESCOPE_LLM_PROVIDER environment variable.
     Set to "openai" (default), "perplexity", or "gemini".
     """
     # Select provider based on CURRENT environment variable each call (avoids stale imports in Streamlit)
     provider = os.getenv("FAKESCOPE_LLM_PROVIDER", LLM_PROVIDER).lower()
-    
+
     if provider == "gemini":
         client = _build_gemini_client()
         model = GEMINI_MODEL
@@ -167,7 +177,7 @@ def generate_explanation(
         model = OPENAI_MODEL
         provider_name = "OpenAI"
         use_gemini = False
-    
+
     if client is None:
         return ""  # No API configured
 
@@ -178,7 +188,11 @@ def generate_explanation(
         pub = it.get("publisher")
         evidence_lines.append(f"- {rating} — {pub} — {url}")
 
-    evidence_str = "\n".join(evidence_lines) if evidence_lines else "(no external fact checks found)"
+    evidence_str = (
+        "\n".join(evidence_lines)
+        if evidence_lines
+        else "(no external fact checks found)"
+    )
 
     # ============================================================
     # PROMPT LOCATION FOR OPENAI, PERPLEXITY, AND GEMINI:
@@ -186,9 +200,9 @@ def generate_explanation(
     # The system_prompt sets the role/behavior of the AI.
     # The user_prompt contains the actual task and context.
     # ============================================================
-    
+
     system_prompt = "You are an expert, neutral fact-checking assistant. Be precise and cite sources."
-    
+
     user_prompt = (
         "You are a careful fact-checking teacher.\n"
         "Explain in 2-4 short paragraphs, accessible to non-experts, why the claim/article might be true or fake.\n"
@@ -219,7 +233,9 @@ def generate_explanation(
                     response = gemini_model.generate_content(full_prompt)
                     text = getattr(response, "text", "") or ""
                     if text.strip():
-                        logger.info(f"LLM explanation generated via {provider_name} model={m} chars={len(text.strip())}")
+                        logger.info(
+                            f"LLM explanation generated via {provider_name} model={m} chars={len(text.strip())}"
+                        )
                         return text.strip()
                 except Exception as ex:
                     last_err = ex
@@ -227,9 +243,13 @@ def generate_explanation(
 
             # As a final fallback, try REST API with the same candidates
             for m in candidates:
-                text = _gemini_generate_via_rest(m, full_prompt, temperature, max_tokens)
+                text = _gemini_generate_via_rest(
+                    m, full_prompt, temperature, max_tokens
+                )
                 if text:
-                    logger.info(f"LLM explanation generated via {provider_name} (REST) model={m} chars={len(text)}")
+                    logger.info(
+                        f"LLM explanation generated via {provider_name} (REST) model={m} chars={len(text)}"
+                    )
                     return text
 
             if last_err:
@@ -247,9 +267,13 @@ def generate_explanation(
                 ],
             )
             content = resp.choices[0].message.content.strip()
-            logger.info(f"LLM explanation generated via {provider_name} model={model} chars={len(content)}")
+            logger.info(
+                f"LLM explanation generated via {provider_name} model={model} chars={len(content)}"
+            )
             return content
     except openai.RateLimitError:
         return f"(LLM explanation unavailable: {provider_name} quota exceeded.)"
     except Exception as e:
-        return f"(LLM explanation unavailable due to {provider_name} API error: {str(e)})"
+        return (
+            f"(LLM explanation unavailable due to {provider_name} API error: {str(e)})"
+        )
