@@ -119,6 +119,20 @@ export FAKESCOPE_OPENAI_MODEL="gpt-4o-mini"  # Default model for OpenAI
 export FAKESCOPE_PERPLEXITY_MODEL="llama-3.1-sonar-large-128k-online"  # Default for Perplexity
 export FAKESCOPE_GEMINI_MODEL="gemini-1.5-flash"  # Default for Gemini
 
+# You can also use a .env file for local development (auto-loaded by Streamlit and app.py):
+# Example .env file:
+# OPENAI_API_KEY=sk-your-openai-key-here
+# PERPLEXITY_API_KEY=pplx-your-perplexity-key-here
+# GEMINI_API_KEY=your-gemini-api-key-here
+# GOOGLE_FACTCHECK_API_KEY=your-google-key-here
+# FAKESCOPE_LLM_PROVIDER=openai
+# FAKESCOPE_OPENAI_MODEL=gpt-4o-mini
+# FAKESCOPE_PERPLEXITY_MODEL=llama-3.1-sonar-large-128k-online
+# FAKESCOPE_GEMINI_MODEL=gemini-1.5-flash
+
+# Only ONE of OpenAI, Perplexity, or Gemini is required for LLM explanations.
+# Choose based on your preference and API key availability.
+
 # Reload shell
 source ~/.zshrc
 ```
@@ -167,7 +181,7 @@ pip install -r requirements.txt
 **Purpose**: Ensure the trained DistilBERT model is present.
 
 ```bash
-ls -lh distilbert_fakenews_2stage/
+ls -lh models/distilbert_fakenews_2stage/
 ```
 
 **Expected output**:
@@ -202,7 +216,7 @@ To reduce Docker image size and enable cloud deployment, you can upload your mod
    ```bash
    python scripts/upload_model_hf.py \
      --repo-id YOUR_USERNAME/fakescope-distilbert-2stage \
-     --model-dir distilbert_fakenews_2stage \
+     --model-dir models/distilbert_fakenews_2stage \
      --private
    ```
    
@@ -210,7 +224,7 @@ To reduce Docker image size and enable cloud deployment, you can upload your mod
    ```bash
    python scripts/upload_model_hf.py \
      --repo-id johndoe/fakescope-distilbert-2stage \
-     --model-dir distilbert_fakenews_2stage \
+     --model-dir models/distilbert_fakenews_2stage \
      --private
    ```
 
@@ -244,7 +258,6 @@ from src.inference import credibility_score
 score = credibility_score('Scientists discover new renewable energy breakthrough')
 print(f'Credibility: {score:.1f}/100')
 "
-```
 OR
 ```
 python3 - <<'PY'
@@ -331,7 +344,7 @@ Press `Ctrl+C` in Terminal 1 to stop.
 
 **What gets included**:
 - `src/` - Application code
-- `distilbert_fakenews_2stage/` - Trained model (~268MB)
+- `models/distilbert_fakenews_2stage/` - Trained model (~268MB)
 - `requirements.txt` - Dependencies
 
 **What gets excluded** (via `.dockerignore`):
@@ -569,7 +582,7 @@ cp ../src/utils.py src/
 touch src/__init__.py
 
 # Copy model (large - may take a minute)
-cp -r ../distilbert_fakenews_2stage .
+cp -r ../models/distilbert_fakenews_2stage .
 ```
 
 ### 5.3 Push to Space
@@ -693,7 +706,7 @@ git push
 
 #### Issue: Model not found error
 ```
-FileNotFoundError: Model not found at './distilbert_fakenews_2stage'
+FileNotFoundError: Model not found at './models/distilbert_fakenews_2stage'
 ```
 
 **Cause**: Model directory missing from Docker context
@@ -701,10 +714,10 @@ FileNotFoundError: Model not found at './distilbert_fakenews_2stage'
 **Solution**:
 ```bash
 # Verify model exists locally
-ls -lh distilbert_fakenews_2stage/
+ls -lh models/distilbert_fakenews_2stage/
 
 # Check .dockerignore doesn't exclude model
-grep distilbert .dockerignore  # Should NOT see distilbert_fakenews_2stage
+grep distilbert .dockerignore  # Should NOT see models/distilbert_fakenews_2stage
 
 # Rebuild with verbose output
 docker build -t fakescope:latest . --progress=plain

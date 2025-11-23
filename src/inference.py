@@ -5,7 +5,7 @@ from typing import Dict
 import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-MODEL_DIR = os.getenv("FAKESCOPE_MODEL_DIR", "./distilbert_fakenews_2stage")
+MODEL_DIR = os.getenv("FAKESCOPE_MODEL_DIR", "./models/distilbert_fakenews_2stage")
 MODEL_MAX_LENGTH = int(os.getenv("FAKESCOPE_MODEL_MAX_LENGTH", "512"))
 
 

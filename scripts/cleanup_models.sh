@@ -30,9 +30,9 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     
     # Backup transformer models
     for model_dir in distilbert_fakenews distilbert_fakenews_2stage distilbert_news_adapted; do
-        if [ -d "${PROJECT_DIR}/${model_dir}" ]; then
+        if [ -d "${PROJECT_DIR}/models/${model_dir}" ]; then
             echo "  Backing up ${model_dir}..."
-            cp -R "${PROJECT_DIR}/${model_dir}" "${BACKUP_DIR}/"
+            cp -R "${PROJECT_DIR}/models/${model_dir}" "${BACKUP_DIR}/"
         fi
     done
     
@@ -57,7 +57,7 @@ cd "${PROJECT_DIR}"
 echo -e "${RED}Deleting models...${NC}"
 
 # Delete transformer models
-rm -rf distilbert_fakenews/ distilbert_fakenews_2stage/ distilbert_news_adapted/
+rm -rf models/distilbert_fakenews/ models/distilbert_fakenews_2stage/ models/distilbert_news_adapted/
 
 # Delete training checkpoints
 rm -rf results/ results_2stage/ mlm_results/ results_fold*/

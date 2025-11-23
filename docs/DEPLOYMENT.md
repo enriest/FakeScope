@@ -91,7 +91,7 @@ By default, only the Streamlit port (8080) is exposed. If you want to expose the
 
 Environment variables:
 
-- `FAKESCOPE_MODEL_DIR` – path to model folder (default: `./distilbert_fakenews_2stage`)
+- `FAKESCOPE_MODEL_DIR` – path to model folder (default: `./models/distilbert_fakenews_2stage`)
 - `FAKESCOPE_DB_PATH` – SQLite file path (default: `./data/predictions.db`)
 - `FAKESCOPE_OPENAI_MODEL` – OpenAI model for explanations (default: `gpt-4o-mini`)
 
@@ -221,10 +221,10 @@ async def load_model():
     
     try:
         model = AutoModelForSequenceClassification.from_pretrained(
-            './distilbert_fakenews_2stage'
+            './models/distilbert_fakenews_2stage'
         )
         tokenizer = AutoTokenizer.from_pretrained(
-            './distilbert_fakenews_2stage'
+            './models/distilbert_fakenews_2stage'
         )
         model.eval()  # Set to evaluation mode
         logger.info("Model loaded successfully")
@@ -455,7 +455,7 @@ results_*/
 
 # Docs
 *.md
-Documents/
+docs/
 
 # Tests
 tests/
@@ -558,8 +558,8 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer
 import torch
 
 # Load model
-model = AutoModelForSequenceClassification.from_pretrained('./distilbert_fakenews_2stage')
-tokenizer = AutoTokenizer.from_pretrained('./distilbert_fakenews_2stage')
+model = AutoModelForSequenceClassification.from_pretrained('./models/distilbert_fakenews_2stage')
+tokenizer = AutoTokenizer.from_pretrained('./models/distilbert_fakenews_2stage')
 
 def predict_credibility(text):
     """Predict credibility of news article."""

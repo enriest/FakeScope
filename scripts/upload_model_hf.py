@@ -4,7 +4,7 @@ Usage (from project root):
 
     export HF_TOKEN=your_hf_write_token
     python scripts/upload_model_hf.py --repo-id enriest/fakescope-distilbert-2stage \
-        --model-dir distilbert_fakenews_2stage --private
+        --model-dir models/distilbert_fakenews_2stage --private
 
 Requirements:
     pip install huggingface_hub
@@ -126,7 +126,7 @@ def maybe_create_readme(api: HfApi, repo_id: str) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Upload FakeScope model to Hugging Face Hub")
     parser.add_argument("--repo-id", required=True, help="Target repo id, e.g. user/fakescope-distilbert-2stage")
-    parser.add_argument("--model-dir", default="distilbert_fakenews_2stage", help="Local model directory")
+    parser.add_argument("--model-dir", default="models/distilbert_fakenews_2stage", help="Local model directory")
     parser.add_argument("--private", action="store_true", help="Create as private repo")
     args = parser.parse_args()
 

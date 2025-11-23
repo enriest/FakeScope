@@ -110,7 +110,7 @@ MODEL_CHOICE=${MODEL_CHOICE:-1}
 
 if [ "$MODEL_CHOICE" = "2" ]; then
     echo "  → Copying model files (this may take a minute)..."
-    cp -r distilbert_fakenews_2stage "$DEPLOY_DIR/"
+    cp -r models/distilbert_fakenews_2stage "$DEPLOY_DIR/"
     echo -e "${GREEN}✓ Model copied to deployment directory${NC}"
 else
     echo -e "${BLUE}ℹ Model will be loaded from HF Hub at runtime${NC}"

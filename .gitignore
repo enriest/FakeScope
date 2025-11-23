@@ -21,9 +21,10 @@ __pycache__/
 # Model Artifacts (Large Files)
 # ============================================
 # Transformer models
-distilbert_fakenews/
-distilbert_fakenews_2stage/
-distilbert_news_adapted/
+models/distilbert_fakenews/
+models/distilbert_fakenews_2stage/
+models/distilbert_news_adapted/
+models/distilbert_fakenews_balanced/
 
 # Baseline models
 *.joblib
@@ -107,6 +108,7 @@ desktop.ini
 *_key.txt
 secrets.json
 config/secrets.json
+secretsandrepos.md
 
 # ============================================
 # Logs & Temporary Files
@@ -120,6 +122,12 @@ config/secrets.json
 # Model Backups (Optional)
 # ============================================
 model_backups/
+
+# ============================================
+# Temporary Deployment Folders
+# ============================================
+hf_space_deploy_temp/
+hf_streamlit_deploy/
 
 # ============================================
 # Hugging Face Cache (Optional - Large HF models)

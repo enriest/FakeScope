@@ -15,7 +15,7 @@ huggingface-cli login
 # Upload your model (replace YOUR_USERNAME with your HF username)
 python src/upload_model_hg.py \
   --repo-id YOUR_USERNAME/distilbert-fakenews-2stage \
-  --model-dir ./distilbert_fakenews_2stage
+  --model-dir ./models/distilbert_fakenews_2stage
 
 # For private repos, add --private flag
 ```

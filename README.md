@@ -100,7 +100,7 @@ To reduce Docker image size and enable cloud deployment, you can upload your mod
    ```bash
    python scripts/upload_model_hf.py \
      --repo-id YOUR_USERNAME/fakescope-distilbert-2stage \
-     --model-dir distilbert_fakenews_2stage \
+     --model-dir models/distilbert_fakenews_2stage \
      --private
    ```
    
@@ -108,7 +108,7 @@ To reduce Docker image size and enable cloud deployment, you can upload your mod
    ```bash
    python scripts/upload_model_hf.py \
      --repo-id enriest/fakescope-distilbert-2stage \
-     --model-dir distilbert_fakenews_2stage \
+     --model-dir models/distilbert_fakenews_2stage \
      --private
    ```
    
@@ -194,12 +194,14 @@ python -m spacy download en_core_web_sm
 python -c "import nltk; nltk.download('stopwords'); nltk.download('punkt')"
 
 # 5. Set API keys (optional for LLM integration)
+# You can also create a .env file with these variables
 export OPENAI_API_KEY="sk-your-openai-key"           # If using OpenAI
 export PERPLEXITY_API_KEY="pplx-your-perplexity-key" # If using Perplexity
+export GEMINI_API_KEY="your-gemini-api-key"          # If using Gemini
 export GOOGLE_FACTCHECK_API_KEY="your-google-api-key"
 
 # 6. Choose LLM provider (optional, default: openai)
-export FAKESCOPE_LLM_PROVIDER="openai"  # Options: "openai" or "perplexity"
+export FAKESCOPE_LLM_PROVIDER="openai"  # Options: "openai", "perplexity", or "gemini"
 ```
 
 ### Installation Notes
@@ -229,13 +231,13 @@ The project uses **Jupyter notebooks** as the primary interface. Open the main n
 
 ```bash
 # Option 1: Jupyter Lab (recommended)
-jupyter lab Project.ipynb
+jupyter lab notebooks/Project.ipynb
 
 # Option 2: VS Code
-code Project.ipynb
+code notebooks/Project.ipynb
 
 # Option 3: Classic Jupyter
-jupyter notebook Project.ipynb
+jupyter notebook notebooks/Project.ipynb
 ```
 
 ### Step 3: Run the Full Pipeline
@@ -259,8 +261,8 @@ Open `Project.ipynb` and execute cells sequentially:
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 
-model = AutoModelForSequenceClassification.from_pretrained('./distilbert_fakenews_2stage')
-tokenizer = AutoTokenizer.from_pretrained('./distilbert_fakenews_2stage')
+model = AutoModelForSequenceClassification.from_pretrained('./models/distilbert_fakenews_2stage')
+tokenizer = AutoTokenizer.from_pretrained('./models/distilbert_fakenews_2stage')
 
 text = "Scientists discover breakthrough in renewable energy technology"
 inputs = tokenizer(text, return_tensors='pt', truncation=True, max_length=512)
@@ -298,11 +300,11 @@ FakeScope/
 ├── 📄 pytest.ini                         # Test configuration
 ├── 📄 SUMMARY.md                         # Notebook combination report
 │
-├── 📓 Project.ipynb                      # ⭐ MAIN NOTEBOOK (5,319 lines, 92 cells)
-├── 📓 Development.ipynb                  # Original training pipeline (2,407 lines)
-├── 📓 LLM_Pipeline.ipynb                 # LLM explanations & teacher-student review
-├── 📓 Other.ipynb                        # Advanced ML: XGBoost, SHAP, CI/CD
-├── 📓 guide.ipynb                        # Usage documentation
+├── 📂 notebooks/                         # Jupyter notebooks
+│   ├── Project.ipynb                    # ⭐ MAIN NOTEBOOK (5,319 lines, 92 cells)
+│   ├── Development.ipynb                # Original training pipeline (2,407 lines)
+│   ├── Other.ipynb                      # Advanced ML: XGBoost, SHAP, CI/CD
+│   └── Definition.ipynb                 # Project definitions
 │
 ├── 📂 datasets/                          # Training data (gitignored)
 │   └── input/
@@ -312,17 +314,18 @@ FakeScope/
 │       └── alt 2/
 │           └── New Task.csv              # Dataset 2 (25K articles)
 │
-├── 📂 distilbert_news_adapted/           # Stage 1: MLM pre-trained model
-│   ├── config.json
-│   ├── model.safetensors                 # 268MB
-│   ├── tokenizer.json
-│   └── vocab.txt
-│
-├── 📂 distilbert_fakenews_2stage/        # Stage 2: Final classifier (MAIN MODEL)
-│   ├── config.json
-│   ├── model.safetensors                 # 268MB
-│   ├── tokenizer.json
-│   └── vocab.txt
+├── 📂 models/                            # Trained models
+│   ├── distilbert_news_adapted/         # Stage 1: MLM pre-trained model
+│   │   ├── config.json
+│   │   ├── model.safetensors            # 268MB
+│   │   ├── tokenizer.json
+│   │   └── vocab.txt
+│   │
+│   └── distilbert_fakenews_2stage/      # Stage 2: Final classifier (MAIN MODEL)
+│       ├── config.json
+│       ├── model.safetensors            # 268MB
+│       ├── tokenizer.json
+│       └── vocab.txt
 │
 ├── 📂 mlm_results/                       # Stage 1 MLM checkpoints (gitignored)
 │   ├── checkpoint-2868/
@@ -352,7 +355,7 @@ FakeScope/
 │   └── __init__.py
 │
 ├── 📂 mlruns/                            # MLFlow tracking (gitignored)
-├── 📂 Documents/                         # Project documentation
+├── 📂 docs/                              # Project documentation
 │   └── fakescope-complete.md             # Comprehensive project doc
 │
 ├── 🗜️ tfidf_vectorizer.joblib            # TF-IDF feature extractor
@@ -363,11 +366,10 @@ FakeScope/
 
 ### Key Files Explained
 
-- **`Project.ipynb`**: Complete training pipeline (combines Development + Other + guide)
-- **`Development.ipynb`**: Original research notebook with full training history
-- **`LLM_Pipeline.ipynb`**: Teacher-student review, explanation generation, model introspection
-- **`distilbert_fakenews_2stage/`**: Final production model (load this for predictions)
-- **`distilbert_news_adapted/`**: Intermediate MLM model (only needed for retraining)
+- **`notebooks/Project.ipynb`**: Complete training pipeline (combines Development + Other)
+- **`notebooks/Development.ipynb`**: Original research notebook with full training history
+- **`models/distilbert_fakenews_2stage/`**: Final production model (load this for predictions)
+- **`models/distilbert_news_adapted/`**: Intermediate MLM model (only needed for retraining)
 
 ## 🎯 Models & Performance
 
@@ -588,7 +590,7 @@ export HF_TOKEN=hf_xxx_your_write_token
 #### 3. Upload using helper script
 ```bash
 python scripts/upload_model_hf.py --repo-id YOUR_USER/fakescope-distilbert-2stage \
-  --model-dir distilbert_fakenews_2stage --private
+  --model-dir models/distilbert_fakenews_2stage --private
 ```
 Remove `--private` if you want a public model.
 
@@ -691,8 +693,8 @@ import pytest
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 def test_model_prediction():
-    model = AutoModelForSequenceClassification.from_pretrained('./distilbert_fakenews_2stage')
-    tokenizer = AutoTokenizer.from_pretrained('./distilbert_fakenews_2stage')
+    model = AutoModelForSequenceClassification.from_pretrained('./models/distilbert_fakenews_2stage')
+    tokenizer = AutoTokenizer.from_pretrained('./models/distilbert_fakenews_2stage')
     
     text = "Sample news article"
     inputs = tokenizer(text, return_tensors='pt', truncation=True, max_length=512)

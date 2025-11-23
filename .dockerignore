@@ -24,6 +24,6 @@ htmlcov
 cv_aggregate_results.json
 model_comparison_summary.json
 *.joblib
-distilbert_news_adapted
-# Keep distilbert_fakenews_2stage included (do not ignore)
-distilbert_fakenews_balanced
+models/distilbert_news_adapted
+# Keep models/distilbert_fakenews_2stage included (do not ignore)
+models/distilbert_fakenews_balanced

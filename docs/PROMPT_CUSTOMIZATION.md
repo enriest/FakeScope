@@ -335,5 +335,5 @@ flyctl deploy
 
 For more details, see:
 - Full setup guide: `GUIDE.md`
-- Project documentation: `Documents/fakescope-complete.md`
+- Project documentation: `docs/fakescope-complete.md`
 - Code implementation: `src/openai_explain.py`
