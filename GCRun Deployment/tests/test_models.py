@@ -97,20 +97,13 @@ class TestXGBoostModel:
         assert hasattr(model, "feature_importances_")
         assert len(model.feature_importances_) == X.shape[1]
 
-    def test_xgboost_feature_importance(self):
+    def test_xgboost_feature_importance(self, tfidf_matrix, sample_labels):
         """Test XGBoost returns feature importances."""
         pytest.importorskip("xgboost")
         import xgboost as xgb
-        from sklearn.datasets import make_classification
 
-        # Create a larger dataset where features are actually important
-        X, y = make_classification(
-            n_samples=100,
-            n_features=10,
-            n_informative=5,
-            n_redundant=0,
-            random_state=42
-        )
+        X, _ = tfidf_matrix
+        y = sample_labels[: X.shape[0]]
 
         model = xgb.XGBClassifier(n_estimators=10, random_state=42, verbosity=0)
         model.fit(X, y)
