@@ -1,13 +1,11 @@
-import pytest
-from unittest.mock import Mock, patch, MagicMock
 import os
-from src.openai_explain import (
-    generate_explanation,
-    _truncate,
-    _build_openai_client,
-    _build_perplexity_client,
-    _build_gemini_client,
-)
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
+
+from src.openai_explain import (_build_gemini_client, _build_openai_client,
+                                _build_perplexity_client, _truncate,
+                                generate_explanation)
 
 
 class TestOpenAIExplain:

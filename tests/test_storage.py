@@ -1,8 +1,10 @@
-import pytest
-import sqlite3
 import os
+import sqlite3
 from unittest.mock import patch
-from src.storage import ensure_schema, insert_prediction, fetch_recent, init_db
+
+import pytest
+
+from src.storage import ensure_schema, fetch_recent, init_db, insert_prediction
 
 
 class TestStorage:

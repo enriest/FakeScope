@@ -106,8 +106,9 @@ class TestTextPreprocessor:
 
     def test_empty_text_handling(self):
         """Test handling of empty/None text."""
-        from src.data_pipeline import clean_text_content
         import pandas as pd
+
+        from src.data_pipeline import clean_text_content
 
         text = None
         result = clean_text_content(text)

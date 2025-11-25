@@ -1,11 +1,9 @@
-import pytest
 from unittest.mock import Mock, patch
-from src.factcheck import (
-    _normalize_rating,
-    fetch_fact_checks,
-    aggregate_google_score,
-    is_configured,
-)
+
+import pytest
+
+from src.factcheck import (_normalize_rating, aggregate_google_score,
+                           fetch_fact_checks, is_configured)
 
 
 class TestFactCheck:

@@ -98,6 +98,39 @@ Before deploying deep learning transformers, we established strong baselines usi
     *   `colsample_bytree=0.7`
     *   `subsample=0.8`
 *   **Performance:** Outperformed Random Forest in generalization, serving as the strongest traditional ML component in the final ensemble.
+### 5. LightGBM (Gradient Boosting Alternative)
+
+* **Role:** Provides a fast, memory‑efficient gradient boosting model that works well with high‑dimensional sparse TF‑IDF features.
+
+* **Best Hyperparameters:**  
+  - `n_estimators=200`
+  - `max_depth=7` (or `-1` for unlimited)
+  - `learning_rate=0.05`
+  - `num_leaves=31`
+  - `subsample=0.8`
+  - `colsample_bytree=0.8`
+  - `min_child_samples=20`
+  - `reg_alpha=0.1`
+  - `reg_lambda=0.1`
+
+* **Performance:**  
+  - **Test Accuracy:** ~86‑87% (comparable to XGBoost)
+  - **F1 Score:** ~0.86‑0.88
+
+* **Insight:** LightGBM offers similar predictive power to XGBoost while being faster to train on large feature sets, making it a valuable component of the final ensemble.
+
+
+## 📚 Model Descriptions
+
+| Model | Brief description |
+|-------|-------------------|
+| **Logistic Regression** | Linear classifier that predicts probabilities using a sigmoid; fast and interpretable. |
+| **Decision Tree** | Tree‑based model that splits on TF‑IDF features to capture non‑linear patterns; prone to overfitting if deep. |
+| **Random Forest** | Ensemble of many decision trees (bagging) that reduces variance and improves robustness on sparse data. |
+| **XGBoost** | Gradient‑boosting trees built sequentially, optimized for Apple Silicon; high accuracy with efficient training. |
+| **LightGBM** | Fast, memory‑efficient gradient‑boosting using leaf‑wise growth; comparable performance to XGBoost. |
+| **DistilBERT (2‑stage)** | Lightweight transformer pre‑trained on language, then domain‑adapted on news corpus and fine‑tuned for fake‑news classification. |
+| **Weighted Ensemble** | Combines the above models with empirically tuned weights (DistilBERT 70 %, XGBoost 12 %, LightGBM 10 %, Random Forest 5 %, Logistic Regression 3 %) for best overall performance. |
 
 ## 📊 Results
 

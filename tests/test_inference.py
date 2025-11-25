@@ -1,7 +1,9 @@
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
 import torch
-from src.inference import _normalize_repo_id, predict_proba, credibility_score
+
+from src.inference import _normalize_repo_id, credibility_score, predict_proba
 
 
 class TestInference:
