@@ -2,8 +2,12 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from src.factcheck import (_normalize_rating, aggregate_google_score,
-                           fetch_fact_checks, is_configured)
+from src.factcheck import (
+    _normalize_rating,
+    aggregate_google_score,
+    fetch_fact_checks,
+    is_configured,
+)
 
 
 class TestFactCheck:

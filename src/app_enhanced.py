@@ -98,10 +98,14 @@ def _chat_with_llm(
     """Generate a chat response from the LLM."""
     import openai
 
-    from src.openai_explain import (GEMINI_MODEL, OPENAI_MODEL,
-                                    PERPLEXITY_MODEL, _build_gemini_client,
-                                    _build_openai_client,
-                                    _build_perplexity_client)
+    from src.openai_explain import (
+        GEMINI_MODEL,
+        OPENAI_MODEL,
+        PERPLEXITY_MODEL,
+        _build_gemini_client,
+        _build_openai_client,
+        _build_perplexity_client,
+    )
 
     provider = llm_provider.lower()
 
