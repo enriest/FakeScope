@@ -82,8 +82,10 @@ class TestTextPreprocessor:
     def test_stopwords_removal(self):
         """Test stopword removal."""
         from src.data_pipeline import clean_text_content
+
         try:
             from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
+
             stopwords = set(ENGLISH_STOP_WORDS)
         except ImportError:
             stopwords = {"the", "is", "a", "an", "this", "that"}
@@ -91,9 +93,10 @@ class TestTextPreprocessor:
         text = "this is a test"
         # We need to mock config to ensure remove_stopwords is True
         from src.config import config
+
         original_setting = config.preprocessing.remove_stopwords
         config.preprocessing.remove_stopwords = True
-        
+
         try:
             cleaned = clean_text_content(text, stop_words=stopwords)
             assert "this" not in cleaned

@@ -3,6 +3,7 @@ from unittest.mock import Mock, patch
 import os
 from src.translate import translate_to_english
 
+
 class TestTranslate:
     def test_translate_skip_english(self):
         """Test skipping translation for English text."""
@@ -22,7 +23,7 @@ class TestTranslate:
         result = translate_to_english(text, "es")
         assert result == text
 
-    @patch('src.translate.GoogleTranslator')
+    @patch("src.translate.GoogleTranslator")
     def test_translate_success(self, mock_translator_cls):
         """Test successful translation."""
         mock_translator = Mock()
@@ -34,7 +35,7 @@ class TestTranslate:
         assert result == "Hello world"
         mock_translator_cls.assert_called_with(source="es", target="en")
 
-    @patch('src.translate.GoogleTranslator')
+    @patch("src.translate.GoogleTranslator")
     def test_translate_failure(self, mock_translator_cls):
         """Test translation failure returns original text."""
         mock_translator = Mock()

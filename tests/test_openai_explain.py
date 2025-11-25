@@ -1,7 +1,14 @@
 import pytest
 from unittest.mock import Mock, patch, MagicMock
 import os
-from src.openai_explain import generate_explanation, _truncate, _build_openai_client, _build_perplexity_client, _build_gemini_client
+from src.openai_explain import (
+    generate_explanation,
+    _truncate,
+    _build_openai_client,
+    _build_perplexity_client,
+    _build_gemini_client,
+)
+
 
 class TestOpenAIExplain:
     def test_truncate(self):
@@ -29,7 +36,7 @@ class TestOpenAIExplain:
         client = _build_perplexity_client()
         assert client is not None
         # Handle both with and without trailing slash
-        assert str(client.base_url).rstrip('/') == "https://api.perplexity.ai"
+        assert str(client.base_url).rstrip("/") == "https://api.perplexity.ai"
 
     @patch.dict(os.environ, {}, clear=True)
     def test_build_perplexity_client_no_key(self):
@@ -38,11 +45,11 @@ class TestOpenAIExplain:
         assert client is None
 
     @patch.dict(os.environ, {"GEMINI_API_KEY": "test-key"})
-    @patch('src.openai_explain.os.getenv')
+    @patch("src.openai_explain.os.getenv")
     def test_build_gemini_client(self, mock_getenv):
         """Test Gemini client builder."""
         mock_getenv.return_value = "test-key"
-        with patch.dict('sys.modules', {'google.generativeai': Mock()}):
+        with patch.dict("sys.modules", {"google.generativeai": Mock()}):
             client = _build_gemini_client()
             assert client is not None
 
@@ -52,7 +59,7 @@ class TestOpenAIExplain:
         client = _build_gemini_client()
         assert client is None
 
-    @patch('src.openai_explain._build_openai_client')
+    @patch("src.openai_explain._build_openai_client")
     def test_generate_explanation_openai(self, mock_build_client):
         """Test generation with OpenAI."""
         mock_client = Mock()
@@ -66,25 +73,25 @@ class TestOpenAIExplain:
                 input_text="Test text",
                 model_scores={"fake": 0.1, "true": 0.9},
                 google_items=[],
-                google_score=None
+                google_score=None,
             )
             assert result == "Explanation"
 
-    @patch('src.openai_explain._build_openai_client')
+    @patch("src.openai_explain._build_openai_client")
     def test_generate_explanation_no_client(self, mock_build_client):
         """Test generation when no client is available."""
         mock_build_client.return_value = None
-        
+
         with patch.dict(os.environ, {"FAKESCOPE_LLM_PROVIDER": "openai"}):
             result = generate_explanation(
                 input_text="Test text",
                 model_scores={"fake": 0.1, "true": 0.9},
                 google_items=[],
-                google_score=None
+                google_score=None,
             )
             assert result == ""
 
-    @patch('src.openai_explain._build_openai_client')
+    @patch("src.openai_explain._build_openai_client")
     def test_generate_explanation_error(self, mock_build_client):
         """Test generation error handling."""
         mock_client = Mock()
@@ -96,6 +103,6 @@ class TestOpenAIExplain:
                 input_text="Test text",
                 model_scores={"fake": 0.1, "true": 0.9},
                 google_items=[],
-                google_score=None
+                google_score=None,
             )
             assert "API error" in result

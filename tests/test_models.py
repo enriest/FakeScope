@@ -109,7 +109,7 @@ class TestXGBoostModel:
             n_features=10,
             n_informative=5,
             n_redundant=0,
-            random_state=42
+            random_state=42,
         )
 
         model = xgb.XGBClassifier(n_estimators=10, random_state=42, verbosity=0)

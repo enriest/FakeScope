@@ -2,8 +2,9 @@ import pytest
 from unittest.mock import Mock, patch
 from src.utils import extract_text_from_url
 
+
 class TestUtils:
-    @patch('src.utils.requests.get')
+    @patch("src.utils.requests.get")
     def test_extract_text_success_article(self, mock_get):
         """Test extraction when article tag is present."""
         mock_response = Mock()
@@ -25,7 +26,7 @@ class TestUtils:
         assert result is not None
         assert len(result.split()) == 60
 
-    @patch('src.utils.requests.get')
+    @patch("src.utils.requests.get")
     def test_extract_text_success_paragraphs(self, mock_get):
         """Test extraction fallback to paragraphs."""
         mock_response = Mock()
@@ -45,7 +46,7 @@ class TestUtils:
         assert result is not None
         assert len(result.split()) == 40
 
-    @patch('src.utils.requests.get')
+    @patch("src.utils.requests.get")
     def test_extract_text_too_short(self, mock_get):
         """Test extraction returns None for short text."""
         mock_response = Mock()
@@ -56,7 +57,7 @@ class TestUtils:
         result = extract_text_from_url("http://example.com")
         assert result is None
 
-    @patch('src.utils.requests.get')
+    @patch("src.utils.requests.get")
     def test_extract_text_404(self, mock_get):
         """Test extraction handles 404."""
         mock_response = Mock()
@@ -66,7 +67,7 @@ class TestUtils:
         result = extract_text_from_url("http://example.com")
         assert result is None
 
-    @patch('src.utils.requests.get')
+    @patch("src.utils.requests.get")
     def test_extract_text_exception(self, mock_get):
         """Test extraction handles exceptions."""
         mock_get.side_effect = Exception("Connection error")

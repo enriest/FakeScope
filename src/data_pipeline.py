@@ -129,7 +129,9 @@ def preprocess_text(df: pd.DataFrame, text_column: str = "title") -> pd.DataFram
     logger.info(f"Preprocessing text with {len(stop_words)} stopwords...")
 
     df = df.copy()
-    df["clean_text"] = df[text_column].apply(lambda x: clean_text_content(x, stop_words))
+    df["clean_text"] = df[text_column].apply(
+        lambda x: clean_text_content(x, stop_words)
+    )
 
     # Remove empty texts
     initial_len = len(df)
@@ -145,17 +147,17 @@ def preprocess_text(df: pd.DataFrame, text_column: str = "title") -> pd.DataFram
 def clean_text_content(text, stop_words=None):
     """
     Clean individual text string.
-    
+
     Args:
         text: Input text
         stop_words: Set of stopwords to remove
-        
+
     Returns:
         Cleaned text
     """
     import re
     import string
-    
+
     if pd.isna(text):
         return ""
 
@@ -171,8 +173,7 @@ def clean_text_content(text, stop_words=None):
         tokens = [
             t
             for t in text.split()
-            if t not in stop_words
-            and len(t) >= config.preprocessing.min_token_length
+            if t not in stop_words and len(t) >= config.preprocessing.min_token_length
         ]
         text = " ".join(tokens)
 
