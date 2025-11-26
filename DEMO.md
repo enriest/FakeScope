@@ -46,7 +46,7 @@ To ensure the model learns meaningful signals rather than noise, a multi-layered
 ### 1. TF-IDF Vectorization (Term Frequency-Inverse Document Frequency)
 We transformed raw text into numerical features using `TfidfVectorizer` with settings optimized for both performance and accuracy.
 
-*   **Vocabulary Size:** Limited to **3,000 features** (reduced from 5,000) to speed up training while retaining the most impactful words.
+*   **Vocabulary Size:** Limited to **5,000 features** (increased from 3,000) to capture more semantic nuance while maintaining efficiency.
 *   **N-Grams:** Used **(1, 2)** range (Unigrams and Bigrams) to capture context (e.g., "not true" vs "true").
 *   **Token Pattern:** `r'(?u)\b\w\w+\b'` (Excludes single-character tokens).
 *   **Frequency Filters:**
@@ -70,15 +70,16 @@ Before deploying deep learning transformers, we established strong baselines usi
 *   **Role:** Provides a fast, interpretable linear baseline.
 *   **Best Hyperparameters:** `C=10`, `solver='liblinear'`, `max_iter=100`.
 *   **Performance:**
-    *   **Train Accuracy:** ~91.3%
-    *   **Test Accuracy:** ~88.1%
+    *   **Train Accuracy:** ~94.0%
+    *   **Test Accuracy:** ~89.4%
     *   **Insight:** Good performance but struggles with complex non-linear patterns.
 
 ### 2. Decision Tree (Non-Linear Baseline)
 *   **Role:** Captures simple non-linear relationships but prone to overfitting.
 *   **Best Hyperparameters:** `criterion='entropy'`, `max_depth=20`, `min_samples_split=2`.
 *   **Performance:**
-    *   **Test Accuracy:** ~79.2%
+    *   **Train Accuracy:** ~81.5%
+    *   **Test Accuracy:** ~80.1%
     *   **Insight:** Lowest performing model, likely due to overfitting on noise despite depth limits.
 
 ### 3. Random Forest (Ensemble Baseline)
@@ -86,7 +87,7 @@ Before deploying deep learning transformers, we established strong baselines usi
 *   **Best Hyperparameters:** `n_estimators=200`, `max_depth=None`, `criterion='gini'`.
 *   **Performance:**
     *   **Train Accuracy:** ~99.9% (Overfit)
-    *   **Test Accuracy:** ~86.5%
+    *   **Test Accuracy:** ~88.0%
     *   **Insight:** Strong learner but significantly overfitted the training data compared to the test set.
 
 ### 4. XGBoost (Gradient Boosting Powerhouse)
@@ -98,26 +99,36 @@ Before deploying deep learning transformers, we established strong baselines usi
     *   `colsample_bytree=0.7`
     *   `subsample=0.8`
 *   **Performance:** Outperformed Random Forest in generalization, serving as the strongest traditional ML component in the final ensemble.
-### 5. LightGBM (Gradient Boosting Alternative)
+### 5. Advanced Models (Deep Learning)
 
-* **Role:** Provides a fast, memory‑efficient gradient boosting model that works well with high‑dimensional sparse TF‑IDF features.
+We implemented **DistilBERT**, a lightweight transformer model, to capture deep semantic context that traditional models might miss.
 
-* **Best Hyperparameters:**  
-  - `n_estimators=200`
-  - `max_depth=7` (or `-1` for unlimited)
-  - `learning_rate=0.05`
-  - `num_leaves=31`
-  - `subsample=0.8`
-  - `colsample_bytree=0.8`
-  - `min_child_samples=20`
-  - `reg_alpha=0.1`
-  - `reg_lambda=0.1`
+*   **Model:** `distilbert-base-uncased` (Fine-tuned)
+*   **Training Strategy:**
+    *   **2-Stage Domain Adaptation:** First retrained on the news corpus (Masked Language Modeling) to learn the "language of fake news", then fine-tuned for classification.
+    *   **Early Stopping:** Implemented to prevent overfitting, stopping at optimal epochs.
+*   **Performance:**
+    *   **Test Accuracy:** **~95.5%** (Champion Model)
+    *   **Cross-Validation Accuracy:** **~99.9%** (Robustness check)
+*   **Model source:** [enri-est/fakescope-distilbert-2stage](https://huggingface.co/enri-est/fakescope-distilbert-2stage) (Fine-tuned on News corpus).
+*   **Explainability:** Integrated **Attention Visualization** to interpret which words the model focuses on for its decisions.
+### RoBERTa (exploratory)
+*   **Model:** `roberta-base` (attempted but not fully integrated).
+*   **Status:** Model loading warnings indicated missing components; not included in final ensemble.
+*   **Note:** Future work may incorporate RoBERTa after proper fine-tuning.
 
-* **Performance:**  
-  - **Test Accuracy:** ~86‑87% (comparable to XGBoost)
-  - **F1 Score:** ~0.86‑0.88
+### Ensemble Model (Weighted)
+*   **Composition:** DistilBERT (70%) + XGBoost (12%) + LightGBM (10%) + Random Forest (5%) + Logistic Regression (3%).
+*   **Observed Test Accuracy:** **0.4189** (significantly lower than individual models).
+*   **Observed F1 Score:** **0.0000**.
+*   **Note:** The low performance suggests a mismatch in probability handling or label alignment. Further investigation is required.
 
-* **Insight:** LightGBM offers similar predictive power to XGBoost while being faster to train on large feature sets, making it a valuable component of the final ensemble.
+
+## 🔮 Future Roadmap
+
+*   **Fact-Checking Simulation:** Implement a module to cross-reference claims with verified sources.
+*   **Claim Extraction:** Use **spaCy** to extract key claims from articles for targeted verification.
+*   **Semantic Similarity:** Compare extracted claims with a database of known facts using semantic similarity measures.
 
 
 ## 📚 Model Descriptions
