@@ -1,10 +1,11 @@
+import numpy as np
+import scipy as sp
 import shap
 import torch
 import transformers
-import numpy as np
-import scipy as sp
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
+
 from src.inference import MODEL_MAX_LENGTH
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 
 def get_shap_explainer():
@@ -12,7 +13,8 @@ def get_shap_explainer():
     Returns a SHAP explainer object for the loaded model.
     """
     import os
-    from transformers import DistilBertTokenizer, DistilBertForSequenceClassification
+
+    from transformers import DistilBertForSequenceClassification, DistilBertTokenizer
 
     # Load the model and tokenizer from the local directory
     # Get the project root (parent of src directory)
