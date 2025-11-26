@@ -33,7 +33,7 @@ FakeScope is a research-grade fake news detection system combining traditional m
 ### Problem Statement
 
 Misinformation spreads exponentially faster than human fact-checkers can verify. FakeScope provides:
-- **Automated credibility assessment** with 97-99.7% accuracy
+- **Automated credibility assessment** with 89-96% accuracy
 - **Domain-adapted transformers** using masked language modeling
 - **Explainable predictions** via LLM-generated reasoning
 - **External validation** using Google Fact Check API
@@ -46,13 +46,13 @@ Unlike standard fine-tuning, FakeScope uses **domain adaptation** to improve per
 1. **Stage 1 (MLM)**: Pre-train DistilBERT on unlabeled news corpus → adapts vocabulary to news domain
 2. **Stage 2 (Classification)**: Fine-tune adapted model on labeled fake/true data → achieves +1-3% accuracy boost
 
-This approach yields `distilbert_fakenews_2stage/` with 98-99.5% accuracy vs. 97-99% for standard training.
+This approach yields `distilbert_fakenews_2stage/` with ~95.5% accuracy vs. ~94% for standard training.
 
 ## ✨ Key Features
 
 ### Core Capabilities
 ✅ **2-Stage Transformer Training**: Domain adaptation (MLM) → Classification  
-✅ **State-of-the-Art Accuracy**: 97-99.7% on test set  
+✅ **State-of-the-Art Accuracy**: ~95.5% on test set  
 ✅ **Multi-Model Comparison**: LogReg, RandomForest, XGBoost, DistilBERT  
 ✅ **LLM-Based Explanations**: OpenAI GPT teacher-student review pipeline  
 ✅ **External Fact-Checking**: Google Fact Check API integration with caching  
@@ -148,11 +148,11 @@ FakeScope will automatically download and cache the model from Hugging Face Hub 
 │  ┌─────────────┐  ┌────────────┐  ┌─────────┐  ┌────────────┐ │
 │  │   LogReg    │  │    RF      │  │ XGBoost │  │ DistilBERT │ │
 │  │  (Baseline) │  │ (Ensemble) │  │ (Boost) │  │(Transform) │ │
-│  │   92-95%    │  │   93-96%   │  │ 94-97%  │  │  97-99.5%  │ │
+│  │   ~89.4%    │  │   ~88.0%   │  │ 94-97%  │  │  ~95.5%    │ │
 │  └─────────────┘  └────────────┘  └─────────┘  └────────────┘ │
 │            ↓              ↓             ↓              ↓        │
 │                   WEIGHTED ENSEMBLE                             │
-│                  (98-99.7% accuracy)                            │
+│                  (~95.5% accuracy)                              │
 └─────────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────────┐
@@ -377,11 +377,11 @@ FakeScope/
 
 | Model | Type | Accuracy | F1 Score | Training Time (M4 Mac) | Model Size |
 |-------|------|----------|----------|------------------------|------------|
-| **Logistic Regression** | Traditional | 92-95% | 0.92-0.95 | <1 min | <1 MB |
-| **Random Forest** | Traditional | 93-96% | 0.93-0.96 | ~5 min | ~50 MB |
+| **Logistic Regression** | Traditional | ~89.4% | ~0.89 | <1 min | <1 MB |
+| **Random Forest** | Traditional | ~88.0% | ~0.88 | ~5 min | ~50 MB |
 | **XGBoost** | Boosting | 94-97% | 0.94-0.97 | ~8 min | ~20 MB |
 | **DistilBERT (standard)** | Transformer | 97-99% | 0.97-0.99 | ~45 min | 268 MB |
-| **DistilBERT (2-stage)** | Transformer | **98-99.5%** | **0.98-0.995** | ~2 hours | 268 MB |
+| **DistilBERT (2-stage)** | Transformer | **~95.5%** | **~0.96** | ~2 hours | 268 MB |
 
 ### 2-Stage Training Results
 
