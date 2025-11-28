@@ -138,13 +138,17 @@ User wants to discuss: {user_message}
 
             gemini_key = os.getenv("GEMINI_API_KEY")
             if not gemini_key:
-                return "Gemini API not configured. Set GEMINI_API_KEY environment variable."
+                return (
+                    "Gemini API not configured. Set GEMINI_API_KEY environment variable.",
+                    "gemini-unknown",
+                )
 
             # Try with gemini-2.5-flash first (best price-performance), then fallback
             models_to_try = [
                 "gemini-2.5-flash",
                 "gemini-2.0-flash",
                 "gemini-2.5-flash-lite",
+                "gemini-1.5-flash",
             ]
 
             conversation = context_msg + "\n\nConversation:\n"
@@ -195,7 +199,7 @@ User wants to discuss: {user_message}
                             ]
                             result = "\n".join([t for t in texts if t]).strip()
                             if result:
-                                return result
+                                return result, model_name
                         # No candidates - check for safety ratings or blocks
                         last_error = f"{model_name}: No candidates (possibly blocked). Response: {data}"
                     else:
@@ -215,7 +219,10 @@ User wants to discuss: {user_message}
                     continue
 
             # If all models failed, return error
-            return f"Gemini API error. Tried models: {', '.join(models_to_try)}. Last error: {last_error}"
+            return (
+                f"Gemini API error. Tried models: {', '.join(models_to_try)}. Last error: {last_error}",
+                "gemini-error",
+            )
 
         elif provider == "perplexity":
             client = _build_perplexity_client()
@@ -225,7 +232,7 @@ User wants to discuss: {user_message}
             model = OPENAI_MODEL
 
         if not client:
-            return f"{provider.title()} API not configured."
+            return f"{provider.title()} API not configured.", f"{provider}-unknown"
 
         # Build messages for OpenAI-compatible APIs
         messages = [
@@ -245,10 +252,10 @@ User wants to discuss: {user_message}
         resp = client.chat.completions.create(
             model=model, temperature=0.7, max_tokens=800, messages=messages
         )
-        return resp.choices[0].message.content.strip()
+        return resp.choices[0].message.content.strip(), model
 
     except Exception as e:
-        return f"Error generating response: {str(e)}"
+        return f"Error generating response: {str(e)}", "error"
 
 
 def main():
@@ -528,54 +535,52 @@ def main():
             chat_container = st.container()
             with chat_container:
                 for msg in st.session_state.chat_history:
-                    if msg["role"] == "user":
-                        st.markdown(f"**You:** {msg['content']}")
-                    else:
-                        st.markdown(f"**AI:** {msg['content']}")
-                    st.markdown("---")
+                    with st.chat_message(msg["role"]):
+                        st.markdown(msg["content"])
+                        if msg["role"] == "assistant" and "model" in msg:
+                            st.caption(f"Model: {msg['model']}")
 
             # Chat input
-            user_input = st.text_area(t("your_message"), height=100, key="chat_input")
+            if user_input := st.chat_input(t("your_message")):
+                # Add user message immediately
+                st.session_state.chat_history.append(
+                    {"role": "user", "content": user_input}
+                )
+                with st.chat_message("user"):
+                    st.markdown(user_input)
 
-            col1, col2 = st.columns([1, 5])
-            with col1:
-                send = st.button(t("send"), type="primary")
-            with col2:
-                clear_chat = st.button(t("clear"))
+                # Generate response
+                with st.chat_message("assistant"):
+                    with st.spinner("🤔 AI is thinking..."):
+                        # Prepare context
+                        context = {
+                            "text": results["text"],
+                            "verdict": results["verdict"],
+                            "cred": results["cred"],
+                            "fake_prob": results["model_scores"]["fake"],
+                            "true_prob": results["model_scores"]["true"],
+                            "google_score": results["g_score"],
+                        }
 
-            if clear_chat:
-                st.session_state.chat_history = []
-                st.rerun()
+                        # Get AI response
+                        ai_response, model_used = _chat_with_llm(
+                            user_input,
+                            context,
+                            results["provider"],
+                            st.session_state.chat_history,
+                        )
 
-            if send and user_input:
-                with st.spinner("🤔 AI is thinking..."):
-                    # Prepare context
-                    context = {
-                        "text": results["text"],
-                        "verdict": results["verdict"],
-                        "cred": results["cred"],
-                        "fake_prob": results["model_scores"]["fake"],
-                        "true_prob": results["model_scores"]["true"],
-                        "google_score": results["g_score"],
-                    }
+                        st.markdown(ai_response)
+                        st.caption(f"Model: {model_used}")
 
-                    # Get AI response
-                    ai_response = _chat_with_llm(
-                        user_input,
-                        context,
-                        results["provider"],
-                        st.session_state.chat_history,
-                    )
-
-                    # Add to history
-                    st.session_state.chat_history.append(
-                        {"role": "user", "content": user_input}
-                    )
-                    st.session_state.chat_history.append(
-                        {"role": "assistant", "content": ai_response}
-                    )
-
-                    st.rerun()
+                        # Add to history
+                        st.session_state.chat_history.append(
+                            {
+                                "role": "assistant",
+                                "content": ai_response,
+                                "model": model_used,
+                            }
+                        )
 
             # Quick prompts
             st.markdown(f"#### {t('quick_prompts_title')}")

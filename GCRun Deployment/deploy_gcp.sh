@@ -27,11 +27,12 @@ echo "Service: $SERVICE_NAME"
 # Build the image using Cloud Build
 echo "Building Docker image..."
 # Use cloudbuild.yaml to pass build args
-gcloud builds submit --config cloudbuild.yaml --substitutions=_HF_TOKEN=$HF_TOKEN,_SERVICE_NAME=$SERVICE_NAME . --project $PROJECT_ID
+gcloud builds submit --quiet --config cloudbuild.yaml --substitutions=_HF_TOKEN=$HF_TOKEN,_SERVICE_NAME=$SERVICE_NAME . --project $PROJECT_ID
 
 # Deploy to Cloud Run
 echo "Deploying service..."
 gcloud run deploy $SERVICE_NAME \
+  --quiet \
   --image gcr.io/$PROJECT_ID/$SERVICE_NAME \
   --platform managed \
   --region $REGION \
