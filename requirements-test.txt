@@ -1,0 +1,64 @@
+# FakeScope Test Dependencies
+# Minimal requirements for running unit tests in CI/CD
+# Last updated: 2025-12-14
+
+# ============================================
+# Core Data Science Libraries (Lightweight)
+# ============================================
+pandas>=2.0.0,<3.0.0
+numpy>=1.24.0,<2.1.0
+scikit-learn>=1.3.0,<2.0.0
+
+# ============================================
+# Testing Tools
+# ============================================
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-mock>=3.12.0
+
+# ============================================
+# Code Quality Tools
+# ============================================
+black>=25.0.0
+isort>=5.0.0
+flake8>=6.0.0
+
+# ============================================
+# Utilities
+# ============================================
+python-dotenv>=1.0.0,<2.0.0
+requests>=2.32.3,<3.0.0
+joblib>=1.4.2,<2.0.0
+jsonschema>=4.23.0,<5.0.0
+
+# ============================================
+# Lightweight NLP (for basic tests)
+# ============================================
+nltk>=3.8.1,<4.0.0
+
+# ============================================
+# Statistical Analysis
+# ============================================
+scipy>=1.10.0,<2.0.0
+
+# ============================================
+# Data Parsing
+# ============================================
+beautifulsoup4>=4.12.3,<5.0.0
+
+# ============================================
+# NOTE: Heavy dependencies excluded for CI/CD
+# ============================================
+# The following are NOT included to save disk space:
+# - torch (2GB+)
+# - transformers (500MB+)
+# - mlflow (200MB+)
+# - streamlit, gradio, fastapi (UI frameworks)
+# - xgboost, shap (advanced ML)
+# - spacy (large NLP models)
+# - openai, google-generativeai (LLM APIs)
+#
+# These should be installed separately for:
+# - Local development (use requirements.txt)
+# - Production deployment (use requirements.txt)
+# - Integration tests (use requirements.txt with mocking)
