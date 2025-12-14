@@ -1,9 +1,19 @@
 import numpy as np
 import scipy as sp
-import shap
-import torch
-import transformers
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
+
+try:
+    import shap
+    import torch
+    import transformers
+    from transformers import AutoModelForSequenceClassification, AutoTokenizer
+    HEAVY_DEPS_AVAILABLE = True
+except ImportError:
+    HEAVY_DEPS_AVAILABLE = False
+    shap = None
+    torch = None
+    transformers = None
+    AutoModelForSequenceClassification = None
+    AutoTokenizer = None
 
 from src.inference import MODEL_MAX_LENGTH
 

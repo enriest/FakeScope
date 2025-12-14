@@ -2,8 +2,15 @@ import os
 from functools import lru_cache
 from typing import Dict
 
-import torch
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
+try:
+    import torch
+    from transformers import AutoModelForSequenceClassification, AutoTokenizer
+    TORCH_AVAILABLE = True
+except ImportError:
+    TORCH_AVAILABLE = False
+    torch = None
+    AutoModelForSequenceClassification = None
+    AutoTokenizer = None
 
 MODEL_DIR = os.getenv("FAKESCOPE_MODEL_DIR", "./models/distilbert_fakenews_2stage")
 MODEL_MAX_LENGTH = int(os.getenv("FAKESCOPE_MODEL_MAX_LENGTH", "512"))
