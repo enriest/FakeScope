@@ -6,6 +6,7 @@ try:
     import torch
     import transformers
     from transformers import AutoModelForSequenceClassification, AutoTokenizer
+
     HEAVY_DEPS_AVAILABLE = True
 except ImportError:
     HEAVY_DEPS_AVAILABLE = False

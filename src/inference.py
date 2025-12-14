@@ -5,6 +5,7 @@ from typing import Dict
 try:
     import torch
     from transformers import AutoModelForSequenceClassification, AutoTokenizer
+
     TORCH_AVAILABLE = True
 except ImportError:
     TORCH_AVAILABLE = False
