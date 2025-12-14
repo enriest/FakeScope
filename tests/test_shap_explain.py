@@ -2,7 +2,13 @@ import os
 import sys
 
 import pytest
-import shap
+
+try:
+    import shap
+    SHAP_AVAILABLE = True
+except ImportError:
+    SHAP_AVAILABLE = False
+    shap = None
 
 # Add src to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -10,6 +16,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from src.shap_explain import explain_text, get_shap_explainer
 
 
+@pytest.mark.skipif(not SHAP_AVAILABLE, reason="shap not installed")
 def test_shap_explanation():
     """
     Test that we can generate SHAP values for a simple input.

@@ -47,18 +47,29 @@ scipy>=1.10.0,<2.0.0
 beautifulsoup4>=4.12.3,<5.0.0
 
 # ============================================
+# Web Framework (needed for API tests)
+# ============================================
+fastapi>=0.115.0,<1.0.0
+uvicorn[standard]>=0.30.0,<1.0.0
+
+# ============================================
+# LLM APIs (lightweight, needed for tests)
+# ============================================
+openai>=1.52.2,<2.0.0
+google-generativeai>=0.8.0,<1.0.0
+
+# ============================================
 # NOTE: Heavy dependencies excluded for CI/CD
 # ============================================
 # The following are NOT included to save disk space:
-# - torch (2GB+)
-# - transformers (500MB+)
-# - mlflow (200MB+)
-# - streamlit, gradio, fastapi (UI frameworks)
-# - xgboost, shap (advanced ML)
-# - spacy (large NLP models)
-# - openai, google-generativeai (LLM APIs)
+# - torch (2GB+) - tests will be skipped in CI
+# - transformers (500MB+) - tests will be skipped in CI
+# - mlflow (200MB+) - not needed for unit tests
+# - streamlit, gradio (UI frameworks) - not needed for unit tests
+# - xgboost, shap (advanced ML) - tests will be skipped in CI
+# - spacy (large NLP models) - not needed for basic tests
 #
 # These should be installed separately for:
 # - Local development (use requirements.txt)
 # - Production deployment (use requirements.txt)
-# - Integration tests (use requirements.txt with mocking)
+# - Full test suite (use requirements.txt)

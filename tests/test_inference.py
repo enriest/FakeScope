@@ -1,9 +1,17 @@
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-import torch
+
+try:
+    import torch
+    TORCH_AVAILABLE = True
+except ImportError:
+    TORCH_AVAILABLE = False
 
 from src.inference import _normalize_repo_id, credibility_score, predict_proba
+
+
+pytestmark = pytest.mark.skipif(not TORCH_AVAILABLE, reason="torch not installed")
 
 
 class TestInference:
