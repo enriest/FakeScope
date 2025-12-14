@@ -11,7 +11,6 @@ except ImportError:
 
 from src.inference import _normalize_repo_id, credibility_score, predict_proba
 
-
 pytestmark = pytest.mark.skipif(not TORCH_AVAILABLE, reason="torch not installed")
 
 
